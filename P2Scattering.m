@@ -54,6 +54,8 @@
  * - renamed ChiToN,NToChi,repChN into chiton, ntochi, repChn
  * - renamed XyToSt, StToXy to xytost, sttoxy
  * - included HiggsBranchFormula and related routines from CoulombHiggs.m
+ * - Added ScanAllTrees
+ * - renamed McKayListAllConsistentTrees into McKayScanAllTrees
  *********************************************************************)
  
 Print["P2Scattering 1.3 - A package for evaluating DT invariants on K_{P^2}"];
@@ -185,7 +187,7 @@ McKayVec::usage = "McKayVec[{n1_,n2_,n3_}] computes the positive vector along th
 McKayRay::usage = "McKayRay[{n1_,n2_,n3_},{u_,v_},{k1_,k2_},tx_] produces from {u,v}+k1 vec to (u,v)+k2 vec, decorated with text at the target";
 McKayScattIndex::usage = "McKayScattIndex[TreeList_] computes the index for each tree in TreeList; do not trust the result if internal lines have non-primitive charges";
 McKayScattIndexInternal::usage = "McKayScattIndexInternal[Tree_] computes {total charge, list of Kronecker indices associated to each vertex in Tree}";
-McKayListAllConsistentTrees::usage = "McKayListAllConsistentTrees[Nvec_] generates consistent scattering trees with leaves carrying charge {p,0,0}, {0,p,0},{0,0,p}, with non-zero DSZ pairing at each vertex, with distinct support";
+McKayScanAllTrees::usage = "McKayScanAllTrees[Nvec_] generates consistent scattering trees with leaves carrying charge {p,0,0}, {0,p,0},{0,0,p}, with non-zero DSZ pairing at each vertex, with distinct support";
 McKayListAllTrees::usage = "McKayListAllTrees[Nvec_] generates all trees with leaves carrying charge {p,0,0}, {0,p,0},{0,0,p} and with non-zero DSZ pairing at each vertex ";
 McKayScattCheck::usage = "McKayScattCheck[Tree_]returns {charge,{u,v}coordinate} of the root vertex if Tree is consistent, otherwise {total charge,{}}";
 McKayScattGraph::usage = "McKayScattGraph[Tree_]extracts the list of vertices and adjacency matrix of Tree";
@@ -276,6 +278,7 @@ EvalHiggsG::usage = "EvalHiggsG[Mat_,Cvec_,f_] evaluates any HiggsG[gam,y] appea
 OmbToHiggsG::usage = "OmbToHiggsG[f_] expresses any Omb[gam,y] in f in terms of HiggsG[gam,y]";
 OmToOmb::usage = "OmToOmb[f_] expresses any Om[gam,y] in f in terms of Omb[gam,y]";
 ListAllPartitions::usage = "ListAllPartitions[gam_] returns the list of unordered partitions of the positive integer vector gam as a sum of positive integer vectors "; 
+BinarySplits::usage="BinarySplits[Nvec_] gives the list of dimension vectors which are smaller than Nvec/2";
 
 
 
@@ -667,10 +670,20 @@ EvalQFact[f_]:=f/.{QFact[n_,y_]:>QDeformedFactorial[n,y]};
 QDeformedFactorial[n_,y_]:=If[n<0,Print["QDeformedFactorial[n,y] is defined only for n>=0"],
 		If[n==0,1,(y^(2n)-1)/(y^2-1)QDeformedFactorial[n-1,y]]];
 EvalHiggsG[Mat_,Cvec_,f_]:=f/.{HiggsG[gam_,y_]:>StackInvariant[Mat,Cvec,gam,y]};
-StackInvariantToOmb[gam_,y_]:=Module[{Li,gcd},
-	gcd=GCD@@gam;
-	Li=Flatten[Map[Permutations,ListAllPartitions[{gcd}]],1];
-	-(y-1/y)Sum[Product[-Omb[gam Li[[i,j,1]]/gcd,y]/(y-1/y),{j,Length[Li[[i]]]}]/Length[Li[[i]]]!,{i,Length[Li]}]
+StackInvariant[Mat_,Cvec_,Nvec_,y_]:=Module[{m,JKListAllPermutations,pa,Cvec0},
+  m=Length[Nvec];
+  If[Max[Nvec]<0,Print["StackInvariant: The dimension vector must be positive !"]];
+  If[Plus@@Nvec==0,Return[0]];
+  If[Plus@@Nvec==1,Return[1]];
+  Cvec0=Cvec-(Plus@@(Nvec Cvec))/(Plus@@Nvec);
+  pa=Flatten[Map[Permutations,ListAllPartitions[Nvec]],1];
+    (-y)^( Sum[-Max[Mat[[k,l]],0]Nvec[[k]]Nvec[[l]],{k,m},{l,m}]-1+Plus@@ Nvec)
+	   (y^2-1)^(1-Plus@@Nvec)
+	Sum[If[(Length[pa[[i]]]==1) ||And@@Table[Sum[Cvec0[[k]] pa[[i,a,k]],{a,b},{k,m}]>0,{b,Length[pa[[i]]]-1}],
+      (-1)^(Length[pa[[i]]]-1)
+       y^(2 Sum[Max[ Mat[[l,k]],0] pa[[i,a,k]]pa[[i,b,l]],
+    {a,1,Length[pa[[i]]]},{b,a,Length[pa[[i]]]},{k,m},{l,m}])/
+    Product[QFact[pa[[i,j,k]],y] ,{j,1,Length[pa[[i]]]},{k,m}],0],{i,Length[pa]}]
 ];
 OmToOmb[f_]:=f/. {Om[gam_,y_]:>DivisorSum[GCD@@gam,(y-1/y)/(y^#-1/y^#)/# MoebiusMu[#] Omb[gam/#,y^#]&]};
 OmbToHiggsG[f_]:=f/.{Omb[gam_,y_]:>Module[{Li,gcd},
@@ -696,6 +709,12 @@ If[Plus@@gam==1, {{gam}},
 				,{i,Length[Li]}],1]]
          ,1]]
 	]];
+
+BinarySplits[Nvec_]:=Module[{Li,Li1,Nl},
+If[Plus@@Nvec==1,Li1=Nvec,
+Li=Drop[Drop[Flatten[Table[Table[Nl[i],{i,Length[Nvec]}],Evaluate[Sequence@@Table[{Nl[i],0,Nvec[[i]]},{i,Length[Nvec]}]]],Length[Nvec]-1],1],-1];
+Li1=Take[Li,Ceiling[Length[Li]/2]];
+Li1]];
 
 
 
@@ -1019,16 +1038,18 @@ McKayIntersectRays[{n1_,n2_,n3_},{nn1_,nn2_,nn3_},z_,zz_]:=
 (* returns (x,y) coordinate of intersection point of two rays, or {} if they don't intersect *)
 Module[{zi},If[(n3 (nn1-nn2)+n1 (nn2-nn3)+n2 (-nn1+nn3)!=0) ,zi={(n3 (2 nn1+nn2)+n2 (nn1-nn3)-n1 (nn2+2 nn3))/(2 (n3 (nn1-nn2)+n1 (nn2-nn3)+n2 (-nn1+nn3))),(Sqrt[3] ((n1+n3) nn2-n2 (nn1+nn3)))/(2 (n3 (-nn1+nn2)+n2 (nn1-nn3)+n1 (-nn2+nn3)))};
 If[(zi-z) . McKayVec[{n1,n2,n3}]>=0&&(zi-zz) . McKayVec[{nn1,nn2,nn3}]>=0,zi,{}]]];
-McKayScattDiag[TreeList_]:=Module[{T,TNum,Diagram,DiagramList},
+
+McKayScattDiag[TreeList_]:=Module[{T,TNum,Diagram},
 (* Draws scattering diagram in (x,y) plane for each tree in Treelist *)
-DiagramList=Table[
+Diagram={};Do[
 T=McKayScattDiagInternal[TreeList[[i]]];
 TNum=T/.repChn;
-Diagram={TreeHue[Length[TreeList],i]};
+AppendTo[Diagram,TreeHue[Length[TreeList],i]];
 AppendTo[Diagram,T[[3]]];
 AppendTo[Diagram,Arrow[{TNum[[2]],TNum[[2]]+McKayVec[TNum[[1]]]/GCD@@(TNum[[1]])}]];
-AppendTo[Diagram,Text[TNum[[1]]/.McKayrep,TNum[[2]]+McKayVec[TNum[[1]]]/GCD@@(TNum[[1]])]];Graphics[Diagram],{i,Length[TreeList]}];
-DiagramList];
+AppendTo[Diagram,Text[TNum[[1]]/.McKayrep,TNum[[2]]+McKayVec[TNum[[1]]]/GCD@@(TNum[[1]])]];
+,{i,Length[TreeList]}];
+Graphics[Diagram]];
 
 McKayScattDiagInternal[Tree_]:=Module[{S1,S2,TreeNum,z,Li},
 (* construct total charge, coordinate of root and list of line segments in (x,y) coordinates *) 
@@ -1123,7 +1144,7 @@ Do[AppendTo[LiTrees,{LiTree1[[j]],LiTree2[[k]]}],{j,Length[LiTree1]},{k,Length[L
 ,{i,Length[Li]}];
 ];LiTrees];
 
-McKayListAllConsistentTrees[Nvec_]:=Module[{Li,Li2},
+McKayScanAllTrees[Nvec_]:=Module[{Li,Li2},
 (* generate consistent scattering trees with leaves carrying charge {p,0,0}, {0,p,0},{0,0,p}, with non-zero DSZ pairing at each vertex, with distinct support*)
 Li=McKayListAllTrees[Nvec];
 Li2=Select[Li,Length[McKayScattCheck[#][[2]]]>0&];

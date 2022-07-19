@@ -1,0 +1,666 @@
+
+\documentclass[12pt]{JHEP3}
+\usepackage{epsfig,amsfonts,amssymb,amsmath} 
+ 
+%\setlength{\topmargin}{.5cm}
+%\setlength{\textheight}{23.1cm}Denef
+\setlength{\textwidth}{14.5cm}
+%\setlength{\evensidemargin}{2.4cm}
+%\setlength{\oddsidemargin}{2.4cm} 
+% \renewcommand{\baselinestretch}{1.1}
+% 
+    \def\CI {{\cal I}}
+    \def\CF {{\cal F}}
+   
+\usepackage{marginnote}
+\reversemarginpar
+%\newcommand{\newnotea}{ \marginnote{\bf New in v3.1:}[-4mm]}
+%\newcommand{\newnoteb}{ \marginnote{\bf New in v2.1:}[-4mm]}
+ 
+ \newcommand{\newnotea}{}
+\newcommand{\newnoteb}{}
+
+
+% from Bourjaily arXiv:1212.6974
+%\pdfoutput=1
+%\let\ifpdf\relax
+\usepackage{color}
+\let\normalcolor\relax
+
+\newcommand{\mathematica}[3]{\vspace{0.35cm}\noindent\boxed{\begin{minipage}{#1\textwidth}\begin{tabular}{lp{13cm}}{\color{paper_blue}{\scriptsize{\tt In[1]:}}\raisebox{-0.65pt}{{\scriptsize{\tt=}}}}&{\tt #2}\\{\color{paper_blue}{\scriptsize {\tt Out[1]:}}\raisebox{-0.65pt}{{\scriptsize{\tt=}}}}&{\tt #3}\end{tabular}\end{minipage}}\vspace{0.35cm}}
+
+\definecolor{varcolor}{rgb}{0.1,0.55,0.25}
+\definecolor{functioncolor}{rgb}{0.1,0.35,0.75}
+\definecolor{paper_blue}{rgb}{0.3,0.2,0.75}
+\definecolor{paper_red}{rgb}{0.65,0.1,0.15}
+\definecolor{paper_green}{rgb}{0.05,0.35,0.125}
+\definecolor{paper_grey}{gray}{0.375}
+\definecolor{perm}{rgb}{0.1,0.45,0.85}
+\definecolor{deemph}{rgb}{0.7,0.7,0.7}
+\setlength{\leftmargini}{21pt}
+\newcommand{\vardef}[1]{{\color{varcolor}{\sl #1}\rule[-1.05pt]{7.5pt}{.75pt}}}
+\newcommand{\vardefms}[1]{{\color{varcolor}{\sl #1}\rule[-1.05pt]{15pt}{.75pt}}}
+\newcommand{\vardefo}[1]{{\color{varcolor}{\sl #1}\rule[-1.05pt]{7.5pt}{.75pt}{\bf{\sl :}}}}
+\newcommand{\vardefoo}[1]{{\color{varcolor}{\sl #1}\rule[-1.05pt]{15pt}{.75pt}{\bf{\sl :}}}}
+\newcommand{\defn}[3]{~\\[-35pt]\begin{itemize}\item[]\indent\hspace{-21pt}$\bullet$\hspace{-.75pt} {\tt {\color{functioncolor}#1}\![}#2{\tt\,]\!:}#3\end{itemize}\vspace{-7pt}
+}
+\newcommand{\defnNA}[3]{~\\[-30pt]\begin{itemize}\item[]\indent\hspace{-21pt}$\bullet$\hspace{-.75pt} {\tt {\color{functioncolor}#1}\!}#2{\tt\,\!:}#3\end{itemize}\vspace{-10pt}}
+\newcommand{\defntb}[4]{~\\[-30pt]\begin{itemize}\item[]\indent\hspace{-21pt}$\bullet$\hspace{-.75pt} {\tt {\color{functioncolor}#1}\![}#2{\tt\,]\![}#3{\tt\,]\!:}#4\end{itemize}\vspace{-10pt}}
+\newcommand{\defvar}[2]{~\\[-30pt]\begin{itemize}\item[]\indent\hspace{-21pt}$\bullet$\hspace{-.75pt} \var{#1}: #2\end{itemize}\vspace{-10pt}}
+\newcommand{\var}[1]{{\tt{\color{varcolor}{\tt #1}}}}
+\newcommand{\ind}{\hspace{4ex}}
+\newcommand{\fun}[1]{{\color{functioncolor}{\tt #1}}}
+
+%%%%%%%%%%%%%%%
+
+\newcommand{\hab}{}
+
+
+
+\newcommand{\bZ}{\mathbb{Z}}
+\newcommand{\cC}{\mathcal{C}}
+\newcommand{\cQ}{\mathcal{Q}}
+\newcommand{\cO}{\mathcal{O}}
+\newcommand{\cV}{\mathcal{V}}
+
+\newcommand{\IZ}{\mathbb{Z}}
+\newcommand{\IP}{\mathbb{P}}
+\newcommand{\IH}{\mathbb{H}}
+\newcommand{\IC}{\mathbb{C}}
+\newcommand{\kk}{k}
+
+\newcommand{\IR}{\mathbb{R}}
+
+
+\newcommand{\nn}{\nonumber \\}
+\newcommand{\be}{\begin{equation}}
+\newcommand{\ee}{\end{equation}}
+\newcommand{\ben}{\begin{eqnarray}\displaystyle}
+\newcommand{\een}{\end{eqnarray}}
+
+\newcommand{\refb}[1]{(\ref{#1})}
+\newcommand{\p}{\partial}
+
+\newcommand{\ta}{\tilde\alpha}
+\newcommand{\cc}{\tilde c}
+\newcommand{\ha}{\hat\alpha}
+\newcommand{\dx}{c}
+
+\newcommand\bOm{\bar\Omega}
+\newcommand\tOm{\widetilde\Omega}
+
+\newcommand{\cR}{\mathcal{R}}
+\newcommand{\cF}{\mathcal{F}}
+\newcommand{\cN}{\mathcal{N}}
+\newcommand{\cM}{\mathcal{M}}
+\newcommand{\gref}{g_{\rm Coulomb}}
+\newcommand{\gR}{G_{\rm Higgs}}
+\newcommand{\gRa}{g_{\rm Higgs}}
+\newcommand{\QR}{Q_{\rm Higgs}}
+\newcommand{\bQR}{\bar Q_{\rm Higgs}}
+%\newcommand{\QC}{Q_{\rm Coulomb}}
+%\newcommand{\bQC}{{\bar Q}_{\rm Coulomb}}
+
+\newcommand{\QC}{\Omega}
+\newcommand{\bQC}{\bOm}
+
+\newcommand{\gC}{G_{\rm Coulomb}}
+\newcommand{\OmS}{\Omega_{\rm S}} 
+\newcommand{\Omatt}{\Omega_*} 
+\newcommand{\I}{{\rm i}}
+\DeclareMathOperator{\ch}{ch}
+%\newcommand{\eqref}{\refb}
+
+\renewcommand{\theequation}{\thesection.\arabic{equation}}
+
+%\newcommand{\href}[1]{#1}
+
+\def\newdefy{\vardef{y}}
+
+\title{P2Scattering.m v1.3}
+ 
+\author{Bruno Le Floch and Boris Pioline}
+
+\abstract{Basic documentation for the Mathematica package {\tt P2Scattering.m}
+ }
+
+\begin{document}
+
+
+\maketitle
+
+\baselineskip 15pt
+
+\tableofcontents
+
+\medskip
+
+\section{Summary}
+
+The  {\sc Mathematica} package {\tt P2Scattering.m} provides a suite of routines to study
+the scattering diagram for the derived category $\cC=D^b(K_{\IP^2})$ of coherent sheaves on 
+local $\IP^2$ along the large volume, orbifold and  $\Pi$-stability slices in the space of Bridgeland stability conditions, and extracting the corresponding generalized Donaldson-Thomas invariants $\Omega_Z(\gamma)$. 
+
+Following \cite{P2Global}, the charge vector $\gamma$ stands either for 
+the Chern vector $[r,d,\ch_2]$, its integral cousin $[r,d,\chi)$ where $\chi=r+\frac32d+\ch_2$,
+or the dimension vector $(n_1,n_2,n_3)$ associated to the tilting sequence 
+\be
+(E_1=i_*(\cO), \quad E_2=i_*(\Omega(1))[1], \quad E_3 = i_*(\cO(-1))[2])
+\ee
+such that
+\be
+(n_1,n_2,n_3) = (-\frac32 d-\ch_2-r,  -\frac12 d-\ch_2, \frac12 d-\ch_2) = (-\chi, r+d-\chi,r+2d-\chi)
+\ee
+The central charge is given by $Z(\gamma)=-r T + d T_D -\ch_2$, where $(T,T_D)$ are 
+\be
+T= s+\I t\ ,\quad T_D = \frac12 (s+\I t)^2 
+\ee 
+for the large volume slice, or 
+\be
+\label{Eichler0}
+ \begin{pmatrix} T \\ T_D  \end{pmatrix}
+= \begin{pmatrix} -\frac12 \\ \frac13  \end{pmatrix} 
++  \int_{\tau_o}^{\tau} \begin{pmatrix} 1 \\u \end{pmatrix} \, 
+\, C(u)  du
+\ee
+for the $\Pi$-stability slice, where $C (\tau) = \frac{\eta(\tau)^9}{\eta(3\tau)^3}$ is a
+weight 3 Eisenstein series for $\Gamma_1(3)$ and $\tau_o=-\frac12+\frac{i}{2\sqrt3}$ is 
+the orbifold point. The geometric rays in the scattering diagram are then the real codimension-one 
+loci 
+\be
+\cR_\psi(\gamma) = \{ \tau : \Re(e^{\I\psi} Z(\gamma)=0 \}
+\ee
+Finally, around the orbifold slice, we 
+consider a two-dimensional slice $\theta_1+\theta_2+\theta_3=-\sin\epsilon$ in the
+space of King stability parameters $\theta_i=\Im(e^{-\I\epsilon} Z_\tau(\ch E_i))$, and the rays are
+the real-codimension one loci $n_1\theta_1+n_2\theta_2+n_3\theta_3=0$. 
+
+
+
+
+\medskip
+
+The package file {\tt P2Scattering.m} and various example files 
+can be obtained from  {\tt https://github.com/bpioline/P2Scattering}
+
+\subsection{Basic usage}
+
+Assuming that the file {\tt P2Scattering.m} is present in the user's {\sc Mathematica} Application 
+directory, the package is loaded by entering 
+
+\mathematica{1.0}{ <<P2Scattering`}{P2Scattering 1.2 -- A package for evaluating DT invariants on $K_{P^2}$}
+
+If the file  {\tt P2Scattering.m} has not yet been copied in the user's {\sc Mathematica} Application 
+directory but is in the same directory as the notebook, evaluate instead
+
+\mathematica{1.0}{SetDirectory[NotebookDirectory[]]; <<P2Scattering`}{P2Scattering 1.2- A package for evaluating evaluating DT invariants on $K_{P^2}$}
+
+For given charge $\gamma=[r,d,\chi)$ and point $(s,t)$ on the large volume slice, the trees contributing to the index $\Omega_{(s,t)}(\gamma)$ can be found by using the routine $\fun{ScanAllTrees}$, 
+for example for $\gamma=[3,0,0)$ through the point $(s,t)=(-\frac32,2)$,
+
+\mathematica{1.0}{LiTrees=ScanAllTrees[\{0, 3, 0\}, \{-3/2, 2\}]
+}{
+\{\{-3 Ch[-2], 3 Ch[-1]\}, \{-Ch[-3], Ch[0]\}\}
+}
+
+\mathematica{1.0}{ScattDiagLV[LiTrees, 0]
+}{
+\includegraphics[width=6cm]{figs/Scatt30.pdf}
+}
+
+\mathematica{1.0}{Limit[EvaluateKronecker[ScattIndex[LiTrees]], y -> 1]
+}{
+\{18,9\}
+}
+reproducing the GV invariant $N_3^0=27$. Similarly, one can find the trees contributing near
+the orbifold point using \fun{McKayScanAllTrees}: for the same charge, corresponding to dimension vector $(0,3,6)$, a single tree contributes in the anti-attractor chamber, with index 18,
+
+\mathematica{1.0}{
+LiTrees = McKayScanAllTrees[chiton[\{0, 3, 0\}]]; 
+LiTrees /. McKayrep
+}{
+$\{\{ 3\gamma_2,6 \gamma_3\}\}$
+}
+
+\mathematica{1.0}{
+Limit[EvaluateKronecker[McKayScattIndex[LiTrees]], y ->1]
+}{
+\{18\}
+}
+
+\mathematica{1.0}{
+Show[McKayInitialRays[2], McKayScattDiag[LiTrees]]
+}{
+\includegraphics[width=6cm]{figs/McKayScattering036.pdf}
+}
+
+More  examples can be found on the GitHub repository.
+
+
+\subsection{Online documentation}
+
+The package contains many more routines, documented below, which can be used independently. Basic inline documentation can be obtained by typing e.g. 
+
+\mathematica{1.02}{?EichlerT}{EichlerT[tau\_] gives numerical value of T[tau] using
+Eichler integral, by mapping back to fundamental domain $F_C$}
+   
+\subsection{History}   
+   
+The first version of this package was released together with the preprint \cite{P2Global}. 
+
+
+\section{Symbols and global variables}
+
+ \defvar{y}{refinement parameter}
+ 
+\defn{Ch}{\vardef{m}}{denotes the charge vector for $\cO(m)$;}
+
+\defn{Kr$_m$}{\vardef{p},\vardef{q}}{denotes the index of the Kronecker quiver with m arrows, dimension vector $(p,q)$}
+ 
+
+
+\defvar{tau}{elliptic modulus, $q=e^{2\I\pi\tau}$, for elliptic genus computations}
+
+\defvar{$\gamma_i$}{denotes the charge vector for the i-th node of the McKay quiver}
+
+\defvar{a}{is a parameter running from 0 to 1 along rays}
+
+
+
+\defn{Trees}{\vardef{r},\vardef{d},\vardef{chi}}{gives the list of precomputed trees, when available}
+\defn{McKayTrees}{\{\vardef{n1},\vardef{n2},\vardef{n3}\}}{gives the list of precomputed McKay trees, when available}
+\defvar{ExcepSlopes}{List of slopes of exceptional bundles between -3 and 4}
+\defvar{ListSubsetsAny}{Precomputed list of all binary splits of Range[n] for n=2..10, used by \fun{ListStableTrees}}
+\defvar{FourierC}{List of the first 50 Fourier coefficients of $C$}
+\defvar{FourierCp}{List of the first 50 Fourier coefficients of $C'$}
+\defvar{QuantumVolume}{Quantum period $\cV= \Im T(0) \simeq 0.462758$}
+\defvar{tauO}{orbifold point $-1/2+i/(2\sqrt{3})$}
+\defvar{Initialtau1}{Initial value of tau1 for FindRoot}
+\defvar{Initialtau2}{Initial value of tau2 for FindRoot}
+\defvar{MLV}{Monodromy matrix around cusp at infinity}
+\defvar{MCon}{Monodromy matrix around cusp at 0}
+\defvar{MOrb}{Monodromy matrix around orbifold point $\tau_o$}
+\defvar{MOrbp}{Monodromy matrix around orbifold point $\tau_o+1$}
+
+
+
+\section{Operations on Chern vectors and dimension vectors}
+
+\defn{Euler}{\{\vardef{r},\vardef{d},\vardef{chi}\},\{\vardef{rr},\vardef{dd},\vardef{cchi}\}}
+{computes the Euler form on $D^b(\IP^2)$}
+\defn{DSZ}{\{\vardef{r},\vardef{d},\vardef{chi}\},\{\vardef{rr},\vardef{dd},\vardef{cchi}\}}
+{computes the antisymmetrized Euler form $3(r d'-r' d)$ on $D^b(\IP^2)$}
+\defn{McKayDSZ}{\{\vardef{n1},\vardef{n2},\vardef{n3}\},\{\vardef{nn1},\vardef{nn2},\vardef{nn3}\}]}
+{computes the antisymmetrized quiver Euler form}
+\defn{Disc}{\{\vardef{r},\vardef{d},\vardef{chi}\}}
+{computes the discriminant $\Delta(\gamma)=d^2-2r(\chi-r-\frac32 d))/(2r^2)$}
+\defn{Disch2}{\{\vardef{r},\vardef{d},\vardef{ch2}\}}
+{computes the discriminant $\Delta(\gamma)=(d^2-2r \ch_2)/(2r^2)$}
+\defn{DiscR}{\{\vardef{r},\vardef{d},\vardef{chi}\}}
+{computes the rescaled discriminant $r^2 \Delta(\gamma) = d^2-2r(\chi-r-\frac32 d)$}
+\defn{GenSlope}{\{\vardef{r},\vardef{d},\vardef{chi}\}}
+{computes the slope $d/r$ if $r\neq 0$, or $\chi/d-\frac32$ if $r=0$}
+\defn{DimGieseker}{\{\vardef{r},\vardef{d},\vardef{chi}\}}
+{computes expected dimension of moduli space of Gieseker-semistable sheaves}
+\defn{DimMcKay}{\{\vardef{n1},\vardef{n2},\vardef{n3}\}}
+{computes the dimension of quiver moduli space in anti-attractor chamber}
+\defn{ch2tochi}{\vardef{r},\vardef{d},\vardef{ch2}}
+{produces corresponding $[r,d,\chi)$}
+\defn{chitoch2}{\vardef{r},\vardef{d},\vardef{chi}}
+{produces corresponding $[r,d,\ch_2]$}
+\defn{chiton}{\{\vardef{r},\vardef{d},\vardef{chi}\}}
+{produces the corresponding dimension vector $(n1,n2,n3)$}
+\defn{ntochi}{ntochi[\{\vardef{n1},\vardef{n2},\vardef{n3}\}]}
+{produces the corresponding charge vector $[r,d,chi)$}
+\defn{SpecFlow}{\{\vardef{r},\vardef{d},\vardef{ch2}\},\vardef{k}}
+{computes the translated charge vector $[r,d,\chi)(k)$}
+\defn{SpecFlowch2}{\{\vardef{r},\vardef{d},\vardef{ch2}\},\vardef{k}}
+{computes the translated charge vector $[r,d,\ch_2](k)$}
+\defn{repCh}{}
+{Replacement rule mapping $\fun{Ch}[s]$ or $\fun{Ch}[s][n]$ to their charge vector $[r,d,\chi)$}
+\defn{repCh2}{}
+{Replacement rule mapping $\fun{Ch}[s]$ or $\fun{Ch}[s][n]$ to their charge vector $[r,d,\ch_2]$}
+\defn{repChn}{}
+{repChn transforms Ch[m] into \fun{chiton}$[\{1,m,1+m(m+3)/2\}$]}
+\defn{repChO}{}
+{replaces $Ch[m_]$ by string $\cO(m)$}
+\defn{repKr}{}
+{replaces $Kr_m[p,q]$ by $1$}
+\defn{LPCurve}{\vardef{mu}}
+{computes the Drezet-Le Potier curve $\delta(\mu)$}
+\defn{ExcepToChi}{\vardef{mu}}
+{gives the Chern vector [$r,d,\chi)$ of the exceptional bundle of slope $\mu$}
+\defn{CPointchi}{\vardef{tau}}
+{gives the charge vector $[r,d,\chi)$ of an object that becomes massless at $\tau$ (assuming
+$\tau$ is a rational number)}
+\defn{CPointch2}{\vardef{tau}}
+{gives the charge vector $[r,d,\ch_2]$ of an object that becomes massless at $\tau$ (assuming
+$\tau$ is a rational number)}
+\defn{EvaluateKronecker}{\vardef{f}}
+{replaces each $Kr_m[p,q]$ with the index of the Kronecker quiver with $m$ arrows and dimension vector $(p,q)$, using routines taken from \fun{CoulombHiggs.m} package}
+\defn{McKayrep}{}
+{replaces \{\vardef{n1},\vardef{n2},\vardef{n3}\} by $n_1 \gamma_1+n_2  \gamma_1+n_3\gamma_3$}
+
+
+
+
+\section{K\"ahler moduli space and central charge for $\Pi$-stability}
+
+\defn{ToFundDomainO}{\vardef{tau}}
+{produces $\{\tau',M'\}$ such that $M'\cdot\tau'=\tau$ and $\tau'$ lies in fundamendal domain of $\Gamma_1(3)$ centered around orbifold}
+\defn{ToFundDomainC}{\vardef{tau}}
+{ produces $\{\tau',M'\}$ such that $M'\cdot\tau'=\tau$ and $\tau'$ lies in fundamendal domain of $\Gamma_1(3)$ centered around conifold}
+\defn{ToFundDomainCSeq}{\vardef{tau}}
+{produces $\{\tau',M'\}$ such that $M'\cdot\tau'=\tau$ and $\tau'$ lies in fundamendal domain of $\Gamma_1(3)$ centered around conifold, M is a string of U,V,T[m] generators}
+\defn{ToFundDomainOApprox}{\vardef{tau},\vardef{precision}}
+{produces $\{\tau',M'\}$ such that $M'\cdot\tau'=\tau$ and $\tau'$ lies in fundamendal domain of $\Gamma_1(3)$ centered around orbifold}
+\defn{ToFundDomainCApprox}{\vardef{tau},\vardef{precision}}
+{produces $\{\tau',M'\}$ such that $M'\cdot\tau'=\tau$ and $\tau'$ lies in fundamendal domain of $\Gamma_1(3)$ centered around conifold}
+\defn{ApplyGamma13Lift}{\vardef{M},\vardef{tau}}
+{produces the image of $\tau$ under the 3x3 monodromy matrix $M$}
+\defn{MonodromyOnCharge}{\vardef{M},\{\vardef{r},\vardef{d},\vardef{chi}\}}
+{computes the image of charge vector $[r,d,\chi)$ under sequence of monodromies}
+\defn{MonodromyOnTau}{\vardef{M},\vardef{tau}}
+{computes the image of $\tau$ under sequence of monodromies}
+\defn{FundDomainO}{\vardef{k}}
+{produces the Graphics directives for the fundamental domain of $\Gamma_1(3)$ on the interval 
+$[-\frac12+k,\frac12+k]$}
+\defn{FundDomainC}{\vardef{k}}
+{produces the Graphics directives for the fundamental domain of $\Gamma_1(3)$ on the interval $[k,k+1]$}
+\defn{FundDomain3}{\vardef{k}}
+{produces the Graphics directives for the fundamental domain of $\Gamma_1(3)+\IZ_3$ images on the interval $[k,k+1]$}
+\defn{FundDomainRulesC}{\vardef{k}}
+{gives a list of rules $\tau\to \tau(a)$ for boundaries of \fun{FundDomainC[k]} parametrized by $0<a<1$}
+\defn{FundDomainRulesO}{\vardef{k}}
+{ gives a list of rules $\tau\to \tau(a)$ for boundaries of  \fun{FundDomainO[k]} parametrized by $0<a<1$}
+\defn{FundDomainRules3}{\vardef{k}}
+{gives a list of rules $\tau\to \tau(a)$ for boundaries of \fun{FundDomain3[k]} parametrized by $0<a<1$}
+\defn{EichlerC}{\vardef{tau}}
+{numerically evaluates the Eisenstein series $C(\tau)$}
+\defn{EichlerCp}{\vardef{taup}}
+{numerically evaluates the Eisenstein series $C'(\tau')$}
+\defn{Eichlerf1}{\vardef{tau}}{
+evaluates $2\pi i (\tau+1/2)+\bar f_1(\tau)$}
+\defn{Eichlerf2}{\vardef{tau}}
+{evaluates $\frac12 (2\pi i)^2(\tau+\frac12)^2+2\pi i(\tau+\frac12)\bar f_1(\tau)+\bar f_2(\tau)$}
+\defn{Eichlerf1b}{\vardef{tau}}
+{$=\sum_{n\geq 1} \frac{c_n}{n} e^{2\pi i n \tau}$}
+\defn{Eichlerf2b}{\vardef{tau}}
+{$=-\sum_{n\geq 1} \frac{c_n}{n^2} e^{2\pi i n \tau}$}
+\defn{Eichlerf1p}{\vardef{taup}}
+{$=\sum_{n\geq 1} \frac{c_n}{n} e^{2\pi i n \tau}$}
+\defn{Eichlerf2p}{\vardef{taup}}
+{$=2\pi i \tau' f_1'(\tau')-\sum_{n\geq 1} \frac{c_n}{n^2} e^{2\pi i n \tau}$}
+\defn{EichlerTLV}{\vardef{tau}}
+{gives numerical value of $T(\tau)$ using Eichler integral near LV point}
+\defn{EichlerTDLV}{\vardef{tau}}
+{gives numerical value of $T_D(\tau)$ using Eichler integral near LV point}
+\defn{EichlerTC}{\vardef{tau}}
+{gives numerical value of $T(\tau)$ using Eichler integral near conifold point}
+\defn{EichlerTDC}{\vardef{tau}}
+{gives numerical value of $T_D(\tau)$ using Eichler integral near conifold point}
+\defn{EichlerZ}{\{\vardef{r},\vardef{d},\vardef{chi}\},\vardef{tau}}
+{gives numerical value of $Z_\tau(\gamma)$ by mapping $\tau$ back to fundamental domain $\cF_C$}
+\defn{EichlerZch2}{\{\vardef{r},\vardef{d},\vardef{ch2}\},\vardef{tau}}
+{gives numerical value of $Z_\tau(\gamma)$ by mapping $\tau$ back to fundamental domain $\cF_C$}
+\defn{EichlerZch2LV}{\{\vardef{r},\vardef{d},\vardef{ch2}\},\vardef{tau}}
+{gives numerical value of $Z_\tau(\gamma)$ using Eichler integral at large volume}
+\defn{EichlerT}{\vardef{tau}}
+{gives numerical value of $T(\tau)$ using Eichler integral, by mapping back to fundamental domain $\cF_C$}
+\defn{EichlerTD}{\vardef{tau}}
+{gives numerical value of $T_D(\tau)$ using Eichler integral, by mapping back to fundamental domain $\cF_C$}
+\defn{EichlerTtilde}{\vardef{tau}}
+{gives numerical value of $\tilde{T}=\frac{1}{2\sqrt3}(T-\frac12)$ using Eichler integral, by mapping back to fundamental domain $\cF_C$}
+\defn{EichlerTDtilde}{\vardef{tau}}
+{ gives numerical value of $\tilde{T}_D=T_D-\frac12 T-\frac{1}{12}$ using Eichler integral, by mapping back to fundamental domain $\cF_C$}
+
+
+
+\section{Large volume scattering diagram}
+
+\defn{ZLV}{\{\vardef{r},\vardef{d},\vardef{chi}\},\{\vardef{s},\vardef{t}\}}
+{computes the large volume central charge $-\frac12 r (s+i t)^2+d (s+i t)-(r-\frac32d-\chi)$}
+\defn{ZLVch2}{\{\vardef{r},\vardef{d},\vardef{ch2}\},\{\vardef{s},\vardef{t}\}}
+{computes the central charge $-\frac12 r (s+i t)^2+d (s+i t)-\ch_2$}
+\defn{Wall}{\{\vardef{r},\vardef{d},\vardef{chi}\},\{\vardef{rr},\vardef{dd},\vardef{cchi}\},\{\vardef{s},\vardef{t}\}}
+{computes $\Im[Z(\gamma)\overline{Z(\gamma')}]$}
+\defn{Wallch2}{\{\vardef{r},\vardef{d},\vardef{ch2}\},\{\vardef{rr},\vardef{dd},\vardef{cch2}\},\{\vardef{s},\vardef{t}\}}
+{computes $\Im[Z(\gamma)\overline{Z(\gamma')}]$}
+\defn{TreeCharge}{\vardef{tree}}
+{computes the total charge $[r,d,\chi)$ carried by tree (or list of trees).}
+\defn{TreeChargech2}{\vardef{tree}}
+{computes  the total charge $[r,d,\ch_2]$ carried by tree (or list of trees).}
+\defn{TreeTop}{\vardef{tree}}
+{ computes the (s,t) coordinate of the root of the tree}
+\defn{TreeConstituents}{\vardef{tree}}
+{gives the flattened list of constituents of Tree}
+\defn{FlipTree}{\vardef{tree}}
+{ constructs the reflected tree under $Ch[m]\to -Ch[-m]$}
+\defn{ShiftTree}{\vardef{tree},\vardef{k}}
+{ constructs the shifted tree under $Ch[m]\to Ch-m+k]$}
+\defn{ScattCheck}{\vardef{tree}}
+{returns $\{charge,\{x,y\}\}$ of the root vertex if \var{Tree} is consistent, otherwise 
+$\{total charge,\{\}\}$}
+\defn{ScattSort}{\vardef{Litree}}
+{ sorts trees by growing radius of wall}
+\defn{ScattGraph}{\vardef{tree}}
+{extracts the list of vertices and adjacency matrix of Tree}
+\defn{xytost}{\{\vardef{x},\vardef{y}\}}
+{computes $\{x,\sqrt{x^2+2y}\}$}
+\defn{sttoxy}{\{\vardef{s},\vardef{t}\}}
+{computes $\{s,-\frac12(s^2-t^2)\}$}
+\defn{IntersectRays}{\{\vardef{r},\vardef{d},\vardef{chi}\},\{\vardef{rr},\vardef{dd},\vardef{cchi}\},\vardef{z},\vardef{zz}}
+{returns intersection point $(x,y)$ of two rays if the intersection point lies upward from $z$ and $z'$, or
+the empty set otherwise; the arguments $z,z'$ can be omitted.}  
+\defn{IntersectRaysSt}{\{\vardef{r},\vardef{d},\vardef{chi}\},\{\vardef{rr},\vardef{dd},\vardef{cchi}\},\vardef{psi}}
+{ returns intersection point $(s,t)$ for scattering rays with phase $\psi$, or the empty set if they are collinear}
+\defn{TestBranch}{\{\vardef{r},\vardef{d},\vardef{chi}\},\vardef{s}}
+{returns \var{True} if $(s,\cdot)$ is on the branch with $\Im Z(\gamma)>0$, \var{False} otherwise}
+\defn{Rayt}{\{\vardef{r},\vardef{d},\vardef{chi}\},\vardef{s},\vardef{psi}}
+{ computes  $t(s)$ for the ray $\Re[e^{-i\psi} Z^{\rm LV}(\gamma)]=0$} 
+\defn{Rays}{\{\vardef{r},\vardef{d},\vardef{chi}\},\vardef{t},\vardef{psi}}
+{ computes  $s(t)$ for the ray $\Re[e^{-i\psi} Z^{\rm LV}(\gamma)]=0$} 
+\defn{Raytch2}{\{\vardef{r},\vardef{d},\vardef{chi}\},\vardef{s},\vardef{psi}}
+{ computes  $t(s)$ for the ray $\Re[e^{-i\psi} Z^{\rm LV}(\gamma)]=0$} 
+\defn{Raysch2}{\{\vardef{r},\vardef{d},\vardef{chi}\},\vardef{t},\vardef{psi}}
+{ computes  $s(t)$ for the ray $\Re[e^{-i\psi} Z^{\rm LV}(\gamma)]=0$} 
+\defn{ListStableTrees}{\vardef{LiCh},\{\vardef{s0},\vardef{t0}\}}
+{constructs consistent trees from constituents in \var{LiCh} of the form $k_i Ch[m_i]$, 
+which are stable at $(s_0,t_0)$}
+\defn{ListStableTreesPerturb}{\vardef{LiCh},\{\vardef{s0},\vardef{t0}\}}
+{constructs consistent trees from constituents in \var{LiCh} of the form $k_i Ch[m_i]$, 
+which are stable at $(s_0,t_0)$ after perturbing  the $m_i$'s}
+\defn{ListStablePlanarTrees}{\vardef{LiCh},\{\vardef{s0},\vardef{t0}\}}
+{constructs consistent planar trees from constituents in LiCh of the form $k_i Ch[m_i]$, 
+which are stable at $(s_0,t_0)$}
+\defn{ScanConstituents}{\{\vardef{r},\vardef{d},\vardef{chi}\},\{\vardef{mmin},\vardef{mmax}\},
+\{\vardef{nmin},\vardef{nmax}\},\vardef{phimax}}
+{ searches possible list of constituents  with slope in $[mmin,mmax]$, number of constituents in $[nmin,nmax]$, electric potential less than phimax and charges adding up to $[r,d,\chi)$}
+
+\defn{ScanAllTrees}{\{\vardef{r},\vardef{d},\vardef{chi}\},\{\vardef{s},\vardef{t}\}}
+{ constructs all possible trees with charges adding up to $[r,d,\chi)$ leading to an
+outgoing ray through the point $(s,t)$; uses
+\fun{ScanConstituents} with the most conservative values 
+$mmin=s-t, mmax=s+t$, $nmin=1, nmax=2\varphi_{s}(\gamma)$
+and $phimax=\varphi_{s}(\gamma)$ }
+
+\defn{ScanBinarySplits}{\{\vardef{r},\vardef{d},\vardef{chi}\},\{\vardef{s0},\vardef{t0}\}}
+{produces list of $[r',d',\chi')$ such that $[r,d,\chi)$ can split into $[r',d',\chi')$ along the ray starting at $(s_0,t_0)$}
+
+
+\defn{ScanKroneckerSplits}{\{\vardef{r},\vardef{d},\vardef{chi}\}}
+{scans all possible pairs $\{-k' Ch(m'), k Ch(m)\}$ such that each pair scatters into $[r,d,\chi)$}
+\defn{ScattIndex}{\vardef{TreeList}}
+{computes the index for each tree in \var{TreeList}; do not trust the result if internal lines have non-primitive charges !}
+\defn{ScattIndexInternal}{\vardef{TreeList}}
+{computes total charge, list of Kronecker indices associated to each vertex in \var{Tree}}
+
+\defn{ScattDiag}{\vardef{TreeList}}
+{ draws scattering diagram in $(x,y)$ plane for each tree in \var{TreeList}} 
+\defn{ScattDiagOverlay}{\vardef{TreeList}}
+{ overlays scattering diagrams in $(x,y)$ plane for each tree in \var{TreeList}} 
+\defn{ScattDiagxy}{\vardef{TreeList},\vardef{psi}}
+{ draws scattering diagrams in $(x,y)$ plane overlaying each tree in \var{TreeList}, marking the
+ initial points} 
+ 
+ \defn{ScattDiagInternal}{\vardef{Tree}}
+{ constructs a list \{total charge, coordinate of root, list of line segments, \{min(x), max(x)\}\}
+for large volume scattering 
+ in (x,y) coordinates; used by \fun{ScattDiag}} 
+
+
+\defn{ScattDiagSt}{\vardef{TreeList},\vardef{psi}}
+{ draws scattering diagram in $(s,t)$ plane for each trees in \var{TreeList}, approximating
+each edge by a straight line and overlaying
+the various trees; if $\psi$ is omitted, it is assumed to vanish. }
+
+ \defn{ScattDiagInternalSt}{\vardef{Tree},\vardef{psi}}
+{ constructs a list \{total charge, coordinate of root, list of line segments, \{min(s), max(s)\}\}
+for large volume scattering 
+ in (s,t) coordinates, , approximating
+each edge by a straight line;  if $\psi$ is omitted, it is assumed to vanish;
+ used by \fun{ScattDiagSt}}  
+ 
+\defn{ScattDiagLV}{\vardef{TreeList},\vardef{psi}}
+{draws scattering diagram in $(s,t)$  in $(s,t)$ plane for each trees in \var{TreeList}, using exact hyperbolaes for rays and overlaying
+the various trees}
+
+\defn{ScattDiagInternalLV}{\vardef{Tree},\vardef{psi},\vardef{Style}}
+{ constructs total charge, coordinate of root and list of line segments in $(s,t)$ coordinates,
+$ \{\min(x), \max(x)\}$, using PlotStyle$\to$Style for plotting rays ; used by \fun{ScattDiagLV}} 
+
+
+
+\defn{ScattDiagLZ}{\vardef{TreeList}}
+{ draws scattering diagram in Li-Zhao $(s,q)$ plane for each trees in \var{TreeList}}
+
+
+\defn{ScattPhi}{\vardef{TreeList}}
+{ overlays scattering diagrams in $(s,\varphi)$ plane for each tree in \var{TreeList}} 
+
+\defn{ScattPhiInternal}{\vardef{Tree}}
+{constructs a list \{total charge, coordinate of root, list of line segments, \{min(s), max(s)\}\} in $(s,\varphi)$ coordinates;  used by \fun{ScattPhi}}
+
+
+\defn{PlotWallRay}{\{\vardef{r},\vardef{d},\vardef{chi}\},\{\vardef{rr},\vardef{dd},\vardef{cchi}\},
+\vardef{psi},\{\vardef{L1},\vardef{L2},\vardef{H}\}}
+{plots the local scattering $[r,d,\chi)\to [r',d',\chi')+[r-r',d-d',\chi-\chi')$ for phase $\psi$
+ in range $L_1<s<L_2, 0<t<H$ }
+\defn{WallCircle}{[\{\vardef{r},\vardef{d},\vardef{chi}\},\{\vardef{rr},\vardef{dd},\vardef{cchi}\}}{ constructs the graphics directive for the wall of marginal stability}
+
+\defn{TreeHue}{\vardef{i},\vardef{n}}
+{ specifies the color for the $i$-th tree among a list of $n$ - can be modified at will}
+
+\defn{InitialLabelPosition}{\vardef{m}}
+{returns a position $(s,t)$ for the label for an initial ray with slope 
+$m$; this position is lowered vertically on each call, using variables \var{LiSlopes} and 
+\var{LiHeights} to keep track of earlier calls}
+
+\section{Orbifold scattering diagram}
+
+\defn{McKayRayEq}{\{\vardef{n1},\vardef{n2},\vardef{n3}\},\{\vardef{u},\vardef{v}\}}
+{gives the linear form vanishing on the scattering ray}
+\defn{McKayVec}{McKayVec[\{\vardef{n1},\vardef{n2},\vardef{n3}\}}
+{computes the positive vector along the ray}
+\defn{McKayRay}{\{\vardef{n1},\vardef{n2},\vardef{n3}\},\{\vardef{u},\vardef{v}\},\{vardef{k1},\vardef{k2}\},\vardef{tx}}
+{produces an arrow from $(u,v)+k_1 w$ to $(u,v)+k_2 w$, where $w$ is the positive vector along the ray, decorated with text \var{tx} at the target}
+\defn{McKayScattIndex}{\vardef{TreeList}}
+{computes the index for each tree in TreeList; do not trust the result if internal lines have non-primitive charges !}
+\defn{McKayScattIndexInternal}{\vardef{Tree}}
+{computes total charge, list of Kronecker indices associated to each vertex in Tree}
+\defn{McKayListAllConsistentTrees}{\{\vardef{n1},\vardef{n2},\vardef{n3}\}}
+{generates consistent scattering trees with leaves carrying charge $\{p,0,0\}, \{0,p,0\},\{0,0,p\}$ adding up to $(n_1,n_2,n_3)$, with non-zero DSZ pairing at each vertex, with distinct support}
+\defn{McKayListAllTrees}{\{\vardef{n1},\vardef{n2},\vardef{n3}\}}
+{generates all trees with leaves carrying charge $\{p,0,0\}, \{0,p,0\},\{0,0,p\}$ adding up to 
+$(n_1,n_2,n_3)$and with non-zero DSZ pairing at each vertex}
+\defn{McKayScattCheck}{\vardef{Tree}}
+{returns $\{charge,\{u,v\}\}$ of the root vertex if Tree is consistent, otherwise $\{total charge,\{\}\}$}
+\defn{McKayScattGraph}{\vardef{Tree}}
+{extracts the list of vertices and adjacency matrix of Tree}
+\defn{McKayScattDiag}{\vardef{TreeList}}
+{draws McKay scattering diagram in (u,v) plane for each tree in \var{TreeList}} 
+\defn{McKayScattDiagInternal}{\vardef{Tree}}
+{constructs total charge, coordinate of root and list of line segments in $(u,v)$ coordinates; used by \fun{McKayScattDiag}} 
+\defn{McKayIntersectRays}{\{\vardef{n1},\vardef{n2},\vardef{n3}\},\{\vardef{nn1},\vardef{nn2},\vardef{nn3}\}}
+{returnsthe  intersection point $(u,v)$ of two rays, or empty set if they are collinear}
+
+\defn{McKayIntersectRays}{\{\vardef{n1},\vardef{n2},\vardef{n3}\},\{\vardef{nn1},\vardef{nn2},\vardef{nn3}\},\vardef{z},\vardef{zz}}
+{returns intersection point $(u,v)$ of two rays if the intersection point lies upward from $z$ and $z'$, or 
+empty set otherwise}
+\defn{McKayInitialRays}{\vardef{psi},\vardef{L}}
+{draws the initial rays in $(u',v')$ plane, rescaling each arrow by a factor of $L$. If the argument $\psi$
+is omitted, it is assumed to be $\frac{\pi}{2}$.}
+
+\section{Exact scattering diagram}
+\defn{CriticalPsi}{\vardef{mu}}
+{$=\arctan(\mu/\cV)$}
+
+
+\defn{IntersectExactRaysLV}{\{\vardef{r},\vardef{d},\vardef{chi}\},\{\vardef{rr},\vardef{dd},\vardef{cchi}\},\vardef{psi}}
+{returns value of $\tau$ at intersection point of two exact rays using \fun{EichlerTLV} to evaluate the periods, or 0 if they are collinear}
+\defn{IntersectExactRaysC}{\{\vardef{r},\vardef{d},\vardef{chi}\},\{\vardef{rr},\vardef{dd},\vardef{cchi}\},\vardef{psi}}
+{  returns value of $\tau$ atf intersection point of two exact rays using \fun{EichlerTC} to evaluate the periods, or 0 if they are collinear}
+\defn{XY}{\vardef{tau},\vardef{psi}}
+{computes the affine coordinates $(x,y)$ such that scattering  rays are straight lines $ry+dx-\ch_2=0$}
+\defn{CPointxy}{\vardef{tau}}
+{computes the $(x,y)$ coordinate of initial point $Ch[\tau]$  (assuming
+$\tau$ is a rational number)}
+\defn{IntegralCurve}{\vardef{tauinit},\vardef{tangent},\{\vardef{ainit},\vardef{amin},\vardef{amax}\},\vardef{boundaries}}
+{produces a function $f:a\in [0,1]\to \IH$ with $f(ainit)=tauinit$ following the tangent direction (an expression in $\tau$) and stopping at the boundaries (by default: $\{Im\tau =0.01\}$).  The range of integration parameters $\{amin,amax\}$ can be infinite provided the actual rays remain finite by hitting the boundaries.}
+\defn{NormalizeFunctionDomain}{\vardef{fun}} 
+{rescales the argument of the \fun{InterpolatingFunction} \var{fun} to interval $[0,1]$}
+\defn{DtauT}{\vardef{tau}}
+{numerically evaluates $\partial_\tau T(\tau)$}
+\defn{DtauZch2}{\{\vardef{r},\vardef{d},\vardef{ch2}\}m\vardef{tau}}
+{numerically evaluates $\partial_\tau  Z_\tau(\gamma)$}
+\defn{DtauZ}{\{\vardef{r},\vardef{d},\vardef{chi}\},\vardef{tau}}
+{numerically evaluates $\partial_\tau  Z_\tau(\gamma)$}
+\defn{ArgDtauT}{vardef{tau}}
+{computes the argument of $T'(\tau)$, between $-\pi$ and $\pi$}
+\defn{ArgDtauTD}{vardef{tau}}
+{computes the argument of $T'_D(\tau)$, between $-\pi$ and $\pi$}
+\defn{ArgDtauZch2}{\{\vardef{r},\vardef{d},\vardef{ch2}\},\vardef{tau}}
+{computes the argument of $\partial_\tau  Z_\tau(\gamma)$,  between $-\pi$ and $\pi$}
+\defn{UnitDtauT}{vardef{tau}}
+{numerically evaluates $\partial_\tau T(\tau)/|\partial_\tau T(\tau)|$}
+\defn{UnitDtauDT}{vardef{tau}}
+{numerically evaluates $\partial_\tau T_D(\tau)/|\partial_\tau T_D(\tau)|$}
+\defn{UnitDtauZ}{\{\vardef{r},\vardef{d},\vardef{chi}\}\vardef{tau}}
+{numerically evaluates $\partial_\tau  Z_\tau(\gamma)/|\partial_\tau  Z_\tau(\gamma)|$}
+\defn{UnitDtauZch2}{\{\vardef{r},\vardef{d},\vardef{ch2}\}\vardef{tau}}
+{numerically evaluates $\partial_\tau  Z_\tau(\gamma)/|\partial_\tau  Z_\tau(\gamma)|$}
+\defn{NormalizeApprox}{\vardef{z},\vardef{eps}}
+{normalizes $z\in \IC$ to roughly unit length for large z, but behaves smoothly near zero.}
+\defn{TotalChargech2}{\vardef{Tree}}
+{ gives the total charge vector $[r,d,\ch_2]$ of a given tree (nested list).}
+\defn{TotalChargechi}{\vardef{Tree}}
+{ gives the total charge vector $[r,d,\chi)$ of a given tree (nested list).}
+\defn{ConifoldRay}{\vardef{init},\vardef{psi},\vardef{homshift}}
+{gives a function $f:a\in [0,1]\to \IH$ parametrizing the ray starting at the rational number 
+init$=\frac{p}{q}$ (with $q\neq 0 \mod 3$}
+\defn{RayCh}{\vardef{psi}}
+{gives an initial ray starting at 0, namely a function $f:[0,1]\to \IH$ starting (close to) 0 and following a ray where $Z_\tau([1,0,0])=-T_D$ has phase $\psi+\frac{\pi}{2} \mod \pi$.  Shifting $\psi$ by $2\pi$  gives a different ray, corresponding to a homological shift by 2.  Values are cached.}
+\defn{RayGeneralch2}{\vardef{psi},\vardef{tauexpr},\vardef{start}}
+{gives a function $a\in[0,1]\to\IH$  parametrizing the ray where $Z_\tau(\gamma)$ has phase  
+$\psi+\frac{\pi}{2} \mod \pi$.  
+The starting point is obtained using \fun{FindRoot}[$\dots, Z_{tauexpr}(\gamma),\dots,start$], see documentation of \fun{FindRoot}.
+}
+\defn{RayFromInfinity}{\{\vardef{r},\vardef{d},\vardef{chi}\},\vardef{psi}}
+{gives a function $f:a\in [0,1] \to \IH$ parametrizing the ray of phase $\psi$ 
+starting from the large volume limit}
+\defn{StabilityWall}{\vardef{Tree},\vardef{tauinit},\vardef{tangent},\{\vardef{ainit},\vardef{amin},\vardef{amax}\}}
+{gives a a function $f:a\in [0,1] \to \IH$ parametrizing the stability wall for the last fusion of the tree.  The tree can also be a pair of charges.  The tauinit is used as a starting point of \fun{FindRoot} along a vertical line.  The last argument can be omitted and defaults to $\{-2,2\}$; it is an interval around the starting point 0, and can be used to restrict the stability wall to only one side of tauinit.}
+\defn{TreeToRays}{\vardef{Tree},\vardef{psi}}
+{gives the (flat) list of rays (functions $f:[0,1]\to \IH$ where $Z_\tau(\gamma_e)$ has phase $\psi+\frac{\pi}{2} \mod \pi$ along each edge with charge $\gamma_e$.  
+The tree is given as a nested list of initial objects of the form $k Ch[p/q][n]$ 
+with $k,p,q,n$ integers.}
+\defn{TreeToRaysPlot}{\vardef{Tree},\vardef{psi},\vardef{plotoptions}}
+{Plots the rays produced by \fun{TreeToRays[Tree,psi]} with the given plot options.}
+
+
+\bibliography{combined}
+\bibliographystyle{utphys}
+
+
+\end{document}
+
