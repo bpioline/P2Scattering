@@ -121,7 +121,10 @@
  
 \author{Bruno Le Floch and Boris Pioline}
 
-\abstract{Basic documentation for the Mathematica package {\tt P2Scattering.m}
+\abstract{The  {\sc Mathematica} package {\tt P2Scattering.m}, first released alongside our work
+with Pierrick Bousseau and Pierre Descombes \cite{}, provides a suite of routines to study
+the scattering diagram for the derived category $\cC=D^b(K_{\IP^2})$ of coherent sheaves on 
+local $\IP^2$ along the large volume, orbifold and  $\Pi$-stability slices in the space of Bridgeland stability conditions, and extracting the corresponding generalized Donaldson-Thomas invariants $\Omega_Z(\gamma)$. We provide a list of all routines and give a few examples. 
  }
 
 \begin{document}
@@ -170,6 +173,8 @@ loci
 \be
 \cR_\psi(\gamma) = \{ \tau : \Re(e^{\I\psi} Z(\gamma)=0 \}
 \ee
+For the large volume central charge and $\psi=0$, the scattering diagram reduces to the one
+constructed in\cite{Bousseau:2019ift}.
 Finally, around the orbifold slice, we 
 consider a two-dimensional slice $\theta_1+\theta_2+\theta_3=-\sin\epsilon$ in the
 space of King stability parameters $\theta_i=\Im(e^{-\I\epsilon} Z_\tau(\ch E_i))$, and the rays are
@@ -251,36 +256,52 @@ The first version of this package was released together with the preprint \cite{
 
 \section{Symbols and global variables}
 
+\defvar{tau}{K\"ahler modulus in Poincar\'e upper half-plane}
+
+\defvar{tau1}{Real part of \var{tau}}
+
+\defvar{tau2}{Imaginay part of \var{tau}}
+
+\defvar{taup}{Fricke transform $\tau'=-1/(3\tau)$}
+
  \defvar{y}{refinement parameter}
  
-\defn{Ch}{\vardef{m}}{denotes the charge vector for $\cO(m)$;}
+ \defvar{a}{Parameter running from 0 to 1 along rays}
+
+\defn{Ch}{\vardef{m}}{denotes the charge vector for $\cO(m)$ if $m$ is integer; 
+More generally, if $m$ is rational, it denotes the charge of the image of $\cO$
+which is massless at $\tau=m$}
+
+\defn{Ch}{\vardef{m}][\vardef{n}}{denotes the charge vector for $\cO(m)[n]$}
+
 
 \defn{Kr$_m$}{\vardef{p},\vardef{q}}{denotes the index of the Kronecker quiver with m arrows, dimension vector $(p,q)$}
  
+\defvar{gam1}{Charge vector $[-1,0,-1)$ for $E_1[-1]=\cO(0)[-1]$}
+
+\defvar{gam2}{Charge vector $[2,-1,0)$ for $E_2[-1]=\Omega(1)[0]$}
+
+\defvar{gam3}{Charge vector $[-1,1,0)$ for $E_3[-1]=\cO(-1)[1]$}
+
+\defvar{tauO}{orbifold point $-1/2+i/(2\sqrt{3})$}
+
+\defvar{QuantumVolume}{Quantum period $\cV= \Im T(0) \simeq 0.462758$}
+
+\defvar{MLV}{Monodromy matrix in $[r,d,\chi)$ basis around $\tau=i\infty$}
+\defvar{MCon}{Monodromy matrix  in $[r,d,\chi)$ basis around at $\tau=0$}
+\defvar{MOrb}{Monodromy matrix  in $[r,d,\chi)$ basis around orbifold point $\tau_o$}
+\defvar{MOrbp}{Monodromy matrix  in $[r,d,\chi)$ basis around orbifold point $\tau_o+1$}
 
 
-\defvar{tau}{elliptic modulus, $q=e^{2\I\pi\tau}$, for elliptic genus computations}
-
-\defvar{$\gamma_i$}{denotes the charge vector for the i-th node of the McKay quiver}
-
-\defvar{a}{is a parameter running from 0 to 1 along rays}
-
-
-
-\defn{Trees}{\vardef{r},\vardef{d},\vardef{chi}}{gives the list of precomputed trees, when available}
-\defn{McKayTrees}{\{\vardef{n1},\vardef{n2},\vardef{n3}\}}{gives the list of precomputed McKay trees, when available}
+\defn{Trees}{\vardef{r},\vardef{d},\vardef{chi}}{gives the list of precomputed trees at large volume, when available}
+\defn{McKayTrees}{\{\vardef{n1},\vardef{n2},\vardef{n3}\}}{gives the list of precomputed  trees around the orbifold point, when available}
 \defvar{ExcepSlopes}{List of slopes of exceptional bundles between -3 and 4}
 \defvar{ListSubsetsAny}{Precomputed list of all binary splits of Range[n] for n=2..10, used by \fun{ListStableTrees}}
-\defvar{FourierC}{List of the first 50 Fourier coefficients of $C$}
-\defvar{FourierCp}{List of the first 50 Fourier coefficients of $C'$}
-\defvar{QuantumVolume}{Quantum period $\cV= \Im T(0) \simeq 0.462758$}
-\defvar{tauO}{orbifold point $-1/2+i/(2\sqrt{3})$}
-\defvar{Initialtau1}{Initial value of tau1 for FindRoot}
-\defvar{Initialtau2}{Initial value of tau2 for FindRoot}
-\defvar{MLV}{Monodromy matrix around cusp at infinity}
-\defvar{MCon}{Monodromy matrix around cusp at 0}
-\defvar{MOrb}{Monodromy matrix around orbifold point $\tau_o$}
-\defvar{MOrbp}{Monodromy matrix around orbifold point $\tau_o+1$}
+\defvar{FourierC}{List of the first 50 Fourier coefficients of Eisenstein series $C(\tau)$}
+\defvar{FourierCp}{List of the first 50 Fourier coefficients of Eisenstein series $C'(\tau')$}
+
+%\defvar{Initialtau1}{Initial value of tau1 for FindRoot}
+%\defvar{Initialtau2}{Initial value of tau2 for FindRoot}
 
 
 
@@ -309,8 +330,8 @@ The first version of this package was released together with the preprint \cite{
 \defn{chitoch2}{\vardef{r},\vardef{d},\vardef{chi}}
 {produces corresponding $[r,d,\ch_2]$}
 \defn{chiton}{\{\vardef{r},\vardef{d},\vardef{chi}\}}
-{produces the corresponding dimension vector $(n1,n2,n3)$}
-\defn{ntochi}{ntochi[\{\vardef{n1},\vardef{n2},\vardef{n3}\}]}
+{produces the corresponding dimension vector $(n_1,n_2,n_3)$}
+\defn{ntochi}{\{\vardef{n1},\vardef{n2},\vardef{n3}\}]}
 {produces the corresponding charge vector $[r,d,chi)$}
 \defn{SpecFlow}{\{\vardef{r},\vardef{d},\vardef{ch2}\},\vardef{k}}
 {computes the translated charge vector $[r,d,\chi)(k)$}
@@ -321,11 +342,11 @@ The first version of this package was released together with the preprint \cite{
 \defn{repCh2}{}
 {Replacement rule mapping $\fun{Ch}[s]$ or $\fun{Ch}[s][n]$ to their charge vector $[r,d,\ch_2]$}
 \defn{repChn}{}
-{repChn transforms Ch[m] into \fun{chiton}$[\{1,m,1+m(m+3)/2\}$]}
+{Replacement rule mapping $Ch[m]$ into \fun{chiton}$[\{1,m,1+m(m+3)/2\}$]}
 \defn{repChO}{}
-{replaces $Ch[m_]$ by string $\cO(m)$}
+{Replacement rule mapping $Ch[m_]$ to string $O(m)$}
 \defn{repKr}{}
-{replaces $Kr_m[p,q]$ by $1$}
+{replaces $\var{Kr}_m[p,q]$ by $1$}
 \defn{LPCurve}{\vardef{mu}}
 {computes the Drezet-Le Potier curve $\delta(\mu)$}
 \defn{ExcepToChi}{\vardef{mu}}
@@ -546,7 +567,10 @@ $ \{\min(x), \max(x)\}$, using PlotStyle$\to$Style for plotting rays ; used by \
 \vardef{psi},\{\vardef{L1},\vardef{L2},\vardef{H}\}}
 {plots the local scattering $[r,d,\chi)\to [r',d',\chi')+[r-r',d-d',\chi-\chi')$ for phase $\psi$
  in range $L_1<s<L_2, 0<t<H$ }
-\defn{WallCircle}{[\{\vardef{r},\vardef{d},\vardef{chi}\},\{\vardef{rr},\vardef{dd},\vardef{cchi}\}}{ constructs the graphics directive for the wall of marginal stability}
+ 
+\defn{WallCircle}{[\{\vardef{r},\vardef{d},\vardef{chi}\},\{\vardef{rr},\vardef{dd},\vardef{cchi}\}}{ constructs the graphics directive for the wall of marginal stability in $(s,t)$ coordinates}
+
+\defn{WallLine}{[\{\vardef{r},\vardef{d},\vardef{chi}\},\{\vardef{rr},\vardef{dd},\vardef{cchi}\}}{ constructs the graphics directive for the wall of marginal stability in $(s,q)$ coordinates}
 
 \defn{TreeHue}{\vardef{i},\vardef{n}}
 { specifies the color for the $i$-th tree among a list of $n$ - can be modified at will}
@@ -656,6 +680,54 @@ The tree is given as a nested list of initial objects of the form $k Ch[p/q][n]$
 with $k,p,q,n$ integers.}
 \defn{TreeToRaysPlot}{\vardef{Tree},\vardef{psi},\vardef{plotoptions}}
 {Plots the rays produced by \fun{TreeToRays[Tree,psi]} with the given plot options.}
+
+\section{Higgs branch formula}
+In addition, the package includes some routines from the Mathematica 
+package {\tt CoulombHiggs.m} \cite{CoulombHiggs}, mainly for the 
+purpose of evaluating the indices $K_m(p,q)$ of the Kronecker quiver.
+The names of the routines are prefaced by {\tt P2} to avoid clash.
+
+
+
+\defn{P2HiggsBranchFormula}{\vardef{Mat},\vardef{Cvec},\vardef{Nvec} }
+	                                   {standalone routine which computes the Poincar\'e-Laurent
+                   polynomial  of a quiver with DSZ products $\alpha_{ij}=\var{Mat}[[i,j]]$, 
+                   dimension vector $N_i=\var{Nvec}[[i]]$, 
+                   FI parameters $\zeta_i=\var{Cvec}[[i]]$, using Reineke's formula. 
+                   It is assumed, but not checked, that the quiver has no oriented 
+                   loop;}
+
+
+\defn{P2StackInvariant}{\vardef{Mat},\vardef{Cvec},\vardef{Nvec},\vardef{y} }{gives 
+                 the stack 
+                  invariant $G_{\rm Higgs}(\gamma,\zeta,y)$
+                  of a quiver with DSZ matrix $\alpha_{ij}=\var{Mat}[[i,j]]$, possibly rescaled 
+                  by an overall factor of 
+                   \var{{\tt \$QuiverMultiplier}}, 
+                  FI parameters $\zeta_i=\var{Cvec}[[i]]$,  dimension vector $N_i=\var{Nvec}[[i]]$, 		using Reineke's formula; the answer is written in terms of unevaluated
+		$q$-deformed factorials \var{P2QFact[n,y]};}
+
+\defn{P2BinarySplits}{\vardef{Nvec}}{gives the list of dimension vectors $\gamma_L$ less than $\gamma$, quotiented by the equivalence relation $\gamma_L \to \gamma-\gamma_L$.}
+
+\defn{P2OmToOmb}{\vardef{f}}{expresses any $\Omega(\gamma,y)$ in $f$
+ in terms of $\bar\Omega(\gamma,y)$'s;}
+ 
+ \defn{P2OmbToHiggsG}{\vardef{Cvec},\vardef{f} }{expresses  any 
+ $\bar\Omega(\gamma,y)$ in $\var{f}$
+in terms of the (unevaluated) stack invariants $\gR(\gamma,y)$ .}
+
+ \defn{P2EvalHiggsG}{\vardef{Cvec},\vardef{f} }{evaluates any 
+$\gR(\gamma,y)$  in $\var{f}$
+using \fun{P2StackInvariant}}
+
+\defn{P2ListAllPartitions}{\vardef{gam}}{returns the list of unordered 
+                   partitions  of the positive integer vector $\gamma$ as a sum of positive, non-zero integer vectors $\alpha_i$; 
+                   }
+
+\defn{P2QDeformedFactorial}{\vardef{n},\newdefy }{gives the $q$-deformed factorial $[n,y]!$}
+
+\defn{P2EvalQFact}{\vardef{f}}{evaluates any \var{P2QFact[n,y]} appearing in \var{f}}
+
 
 
 \bibliography{combined}

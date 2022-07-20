@@ -73,6 +73,12 @@ Kr::usage = "\!\(\*SubscriptBox[\(Kr\), \(m_\)]\)[p_,q_] denotes the index of th
 \[Gamma]::usage = "\!\(\*SubscriptBox[\(\[Gamma]\), \(i\)]\) denotes the charge vector for the i-th node of the McKay quiver";
 a::usage = "Parameter running from 0 to 1";
 y::usage = "Refinement parameter";
+tau::usage = "Kahler modulus";
+tau1::usage = "Real part of tau";
+tau2::usage = "Imaginary part of tau";
+gam1::usage = "Charge vector [r,d,chi) for E1[-1]=Ch[0][-1]";
+gam2::usage = "Charge vector [r,d,chi) for E2[-1]=Ch[-1/2][0]";
+gam3::usage = "Charge vector [r,d,chi) for E3[-1]=Ch[-1][1]";
 
 (* global variables *)
 Trees::usage = "Trees[{r_,d_,chi_] gives the list of precomputed trees, when available";
@@ -149,6 +155,8 @@ ListStablePlanarTrees::usage = "ListStablePlanarTrees[LiCh_,{s0_,t0_}] construct
 ScanConstituents::usage = "ScanConstituents[gam_,{m0min_,m0max_},{nmin_,nmax_},phimax_] searches possible list of constituents  with slope in [m0min,m0max], number of constituents in [nmin,nmax], cost function less than phimax and charges adding up to gam";
 ScanBinarySplits::usage = "ScanBinarySplits[{r_,d_,chi_},{s0_,t0_}] produces list of {rr,dd,cchi} such that {r,d,chi} can split into {rr,dd,cchi}+{r-rr,d-dd,chi-cchi} along the ray starting at (s0,t0)";
 ScanKroneckerSplits::usage = "ScanKroneckerSplits[{r_,d_,chi_}] produces list of {-k' Ch(m'), k Ch(m)} such that each doublet adds up to {r,d,chi}";
+ScanAllTrees::usage = "ScanAllTrees[{r_,d_,chi_},{s0_,t0_}] constructs all possible trees with charges adding up to [r,d,chi) leading to an outgoing ray through the point (s,t)";
+
 
 (* computing the index *)
 ScattIndex::usage = "ScattIndex[TreeList_] computes the index for each tree in TreeList; do not trust the result if internal lines have non-primitive charges";
@@ -173,7 +181,9 @@ ScattDiagLZ::usage = "ScattDiagLZ[TreeList_] overlays scattering diagrams in (s,
 ScattPhi::usage = "ScattPhi[TreeList_] overlays scattering diagrams in (s,phi) plane for each tree in TreeList"; 
 ScattPhiInternal::usage = "ScattPhiInternal[Tree_] compute {total charge, root coordinate, list of line segments in (s,phi) coordinates, {min(s), max(s)}";
 PlotWallRay::usage = "PlotWallRay[{r_,d_,chi_},{rr_,dd_,cchi_},psi_,{L1_,L2_,H_}] plots the local scattering of (r,d,chi)->{rr,dd,cchi}+{r-rr,d-dd,chi-cchi} in range L1<s<L2, 0<t<H,  rotated by psi";
-WallCircle::usage = "WallCircle[{r_,d_,chi_},{rr_,dd_,cchi_}] constructs the graphics directive for the wall of marginal stability";
+WallCircle::usage = "WallCircle[{r_,d_,chi_},{rr_,dd_,cchi_}] constructs the graphics directive for the wall of marginal stability in (s,t) plane";
+WallLine::usage = "WallLine[{r_,d_,chi_},{rr_,dd_,cchi_}] constructs the graphics directive for the wall of marginal stability in (s,q) plane";
+
 
 (* routines for McKay scattering diagram *)
 chiton::usage = "chiton[{r_,d_,chi_}] produces the corresponding dimension vector {n1,n2,n3}";
@@ -268,18 +278,18 @@ TreeToRaysPlot::usage="TreeToRaysPlot[tree_,\[Psi]_,plotoptions___] plots the ra
 RayFromInfinity::usage="RayFromInfinity[{r_,d_,chi_},psi_] (a function on [0,1]) is the ray of phase psi starting from the large volume limit";
 StabilityWall::usage="StabilityWall[tree:{_,_},tauinit_,{amin_,amax_}] is a stability wall for the last fusion of the tree, as a function on [0,1].  The tree can also be a pair of charges.  The tauinit is used as a starting point of FindRoot along a vertical line.  The last argument can be omitted and defaults to {-2,2}; it is an interval around the starting point 0, and can be used to restrict the stability wall to only one side of tauinit.";
 
-(* from CoulombHiggs *)
-HiggsBranchFormula::usage = "HiggsBranchFormula[Mat_,Cvec_,Nvec_] computes the Poincare polynomial of a quiver with DSZ matrix Mat, FI parameters Cvec, dimension vector Nvec using Reineke's formula. Accurate only for quivers without closed loops.";
-StackInvariant::usage = "StackInvariant[Mat_,Cvec_,Nvec_,y_] gives the stack invariant of a quiver with DSZ matrix Mat, dimension vector Nvec and FI parameters Cvec computed using Reineke's formula ";
-QFact::usage = "QFact[n_,y_] represents the unevaluated q-deformed Factorial ";
-QDeformedFactorial::usage = "QDeformedFactorial[n_,y_] gives the q-deformed factorial ";
-EvalQFact::usage = "EvalQFact[f_] replaces QFact[n_,y_] with QDeformedFactorial[n,y] everywhere in f ";
-EvalHiggsG::usage = "EvalHiggsG[Mat_,Cvec_,f_] evaluates any HiggsG[gam,y] appearing in f using Reineke's formula ";
-OmbToHiggsG::usage = "OmbToHiggsG[f_] expresses any Omb[gam,y] in f in terms of HiggsG[gam,y]";
-OmToOmb::usage = "OmToOmb[f_] expresses any Om[gam,y] in f in terms of Omb[gam,y]";
-ListAllPartitions::usage = "ListAllPartitions[gam_] returns the list of unordered partitions of the positive integer vector gam as a sum of positive integer vectors "; 
-BinarySplits::usage="BinarySplits[Nvec_] gives the list of dimension vectors which are smaller than Nvec/2";
 
+(* from CoulombHiggs *)
+P2HiggsBranchFormula::usage = "P2HiggsBranchFormula[Mat_,Cvec_,Nvec_] computes the Poincare polynomial of a quiver with DSZ matrix Mat, FI parameters Cvec, dimension vector Nvec using Reineke's formula. Accurate only for quivers without closed loops.";
+P2StackInvariant::usage = "P2StackInvariant[Mat_,Cvec_,Nvec_,y_] gives the stack invariant of a quiver with DSZ matrix Mat, dimension vector Nvec and FI parameters Cvec computed using Reineke's formula.";
+P2QFact::usage = "P2QFact[n_,y_] represents the unevaluated q-deformed Factorial ";
+P2QDeformedFactorial::usage = "P2QDeformedFactorial[n_,y_] gives the q-deformed factorial ";
+P2EvalQFact::usage = "P2EvalQFact[f_] replaces P2QFact[n_,y_] with P2QDeformedFactorial[n,y] everywhere in f ";
+P2EvalHiggsG::usage = "P2EvalHiggsG[Mat_,Cvec_,f_] evaluates any P2HiggsG[gam,y] appearing in f using Reineke's formula ";
+P2OmbToHiggsG::usage = "P2OmbToHiggsG[f_] expresses any P2Omb[gam,y] in f in terms of P2HiggsG[gam,y]";
+P2OmToOmb::usage = "P2OmToOmb[f_] expresses any P2Om[gam,y] in f in terms of P2Omb[gam,y]";
+P2ListAllPartitions::usage = "P2ListAllPartitions[gam_] returns the list of unordered partitions of the positive integer vector gam as a sum of positive integer vectors "; 
+P2BinarySplits::usage="P2BinarySplits[Nvec_] gives the list of dimension vectors which are smaller than Nvec/2";
 
 
 (* ::Section:: *)
@@ -341,8 +351,6 @@ Disch2[{r_,d_,ch2_}]:=(d^2-2r ch2)/(2r^2);
 DiscR[{r_,d_,chi_}]:=(d^2-2r(chi-r-3/2 d));
 GenSlope[{r_,d_,chi_}]:=If[r!=0,d/r,If[d!=0,chi/d-3/2,0]];
 DimGieseker[{r_,c1_,chi_}]:=c1^2-2r (chi-r-3/2 c1)-r^2+1;
-ChToChi[{r_,d_,ch2_}]:={r,d,r+3/2d+ch2};
-ChiToCh[{r_,d_,chi_}]:={r,d,chi-r-3/2d};
 ch2tochi[{r_,d_,ch2_}]:={r,d,r+3/2d+ch2};
 chitoch2[{r_,d_,chi_}]:={r,d,chi-r-3/2d};
 SpecFlow[{r_,d_,chi_},eps_]:={r,d+eps r,chi+3/2 r eps+eps d+r eps^2/2};
@@ -659,45 +667,50 @@ f/.Subscript[Kr, kappa_][g1_,g2_]:>Simplify[P2HiggsBranchFormula[{{0,kappa},{-ka
 
 (* taken from CoulombHiggs.m package *) 
 P2HiggsBranchFormula[Mat_,Cvec_,Nvec_]:=Module[{Cvec0},
-  If[Max[Nvec]<0,Print["HiggsBranchFormula: The dimension vector must be positive !"]];
+  If[Max[Nvec]<0,Print["P2HiggsBranchFormula: The dimension vector must be positive !"]];
   If[Plus@@Nvec==0,Return[0]];
   If[Plus@@Nvec==1,Return[1]];
   Cvec0=Cvec-(Plus@@(Nvec Cvec))/(Plus@@Nvec);
-  EvalQFact[EvalHiggsG[Mat,Cvec0,OmbToHiggsG[OmToOmb[Om[Nvec,y]]]]]
+  P2EvalQFact[P2EvalHiggsG[Mat,Cvec0,P2OmbToHiggsG[P2OmToOmb[P2Om[Nvec,y]]]]]
 ];
 
-EvalQFact[f_]:=f/.{QFact[n_,y_]:>QDeformedFactorial[n,y]};
-QDeformedFactorial[n_,y_]:=If[n<0,Print["QDeformedFactorial[n,y] is defined only for n>=0"],
-		If[n==0,1,(y^(2n)-1)/(y^2-1)QDeformedFactorial[n-1,y]]];
-EvalHiggsG[Mat_,Cvec_,f_]:=f/.{HiggsG[gam_,y_]:>StackInvariant[Mat,Cvec,gam,y]};
-StackInvariant[Mat_,Cvec_,Nvec_,y_]:=Module[{m,JKListAllPermutations,pa,Cvec0},
+P2EvalQFact[f_]:=f/.{P2QFact[n_,y_]:>P2QDeformedFactorial[n,y]};
+
+P2QDeformedFactorial[n_,y_]:=If[n<0,Print["P2QDeformedFactorial[n,y] is defined only for n>=0"],
+		If[n==0,1,(y^(2n)-1)/(y^2-1)P2QDeformedFactorial[n-1,y]]];
+		
+P2EvalHiggsG[Mat_,Cvec_,f_]:=f/.{P2HiggsG[gam_,y_]:>P2StackInvariant[Mat,Cvec,gam,y]};
+
+P2StackInvariant[Mat_,Cvec_,Nvec_,y_]:=Module[{m,JKListAllPermutations,pa,Cvec0},
   m=Length[Nvec];
-  If[Max[Nvec]<0,Print["StackInvariant: The dimension vector must be positive !"]];
+  If[Max[Nvec]<0,Print["P2StackInvariant: The dimension vector must be positive !"]];
   If[Plus@@Nvec==0,Return[0]];
   If[Plus@@Nvec==1,Return[1]];
   Cvec0=Cvec-(Plus@@(Nvec Cvec))/(Plus@@Nvec);
-  pa=Flatten[Map[Permutations,ListAllPartitions[Nvec]],1];
+  pa=Flatten[Map[Permutations,P2ListAllPartitions[Nvec]],1];
     (-y)^( Sum[-Max[Mat[[k,l]],0]Nvec[[k]]Nvec[[l]],{k,m},{l,m}]-1+Plus@@ Nvec)
 	   (y^2-1)^(1-Plus@@Nvec)
 	Sum[If[(Length[pa[[i]]]==1) ||And@@Table[Sum[Cvec0[[k]] pa[[i,a,k]],{a,b},{k,m}]>0,{b,Length[pa[[i]]]-1}],
       (-1)^(Length[pa[[i]]]-1)
        y^(2 Sum[Max[ Mat[[l,k]],0] pa[[i,a,k]]pa[[i,b,l]],
     {a,1,Length[pa[[i]]]},{b,a,Length[pa[[i]]]},{k,m},{l,m}])/
-    Product[QFact[pa[[i,j,k]],y] ,{j,1,Length[pa[[i]]]},{k,m}],0],{i,Length[pa]}]
+    Product[P2QFact[pa[[i,j,k]],y] ,{j,1,Length[pa[[i]]]},{k,m}],0],{i,Length[pa]}]
 ];
-OmToOmb[f_]:=f/. {Om[gam_,y_]:>DivisorSum[GCD@@gam,(y-1/y)/(y^#-1/y^#)/# MoebiusMu[#] Omb[gam/#,y^#]&]};
-OmbToHiggsG[f_]:=f/.{Omb[gam_,y_]:>Module[{Li,gcd},
+
+P2OmToOmb[f_]:=f/. {P2Om[gam_,y_]:>DivisorSum[GCD@@gam,(y-1/y)/(y^#-1/y^#)/# MoebiusMu[#] P2Omb[gam/#,y^#]&]};
+
+P2OmbToHiggsG[f_]:=f/.{P2Omb[gam_,y_]:>Module[{Li,gcd},
 	gcd=GCD@@gam;
-	Li=Flatten[Map[Permutations,ListAllPartitions[{gcd}]],1];
+	Li=Flatten[Map[Permutations,P2ListAllPartitions[{gcd}]],1];
 	Sum[
-	   Product[HiggsG[gam Li[[i,j,1]]/gcd,y],{j,Length[Li[[i]]]}]/Length[Li[[i]]]/(y-1/y)^(Length[Li[[i]]]-1),
+	   Product[P2HiggsG[gam Li[[i,j,1]]/gcd,y],{j,Length[Li[[i]]]}]/Length[Li[[i]]]/(y-1/y)^(Length[Li[[i]]]-1),
 	{i,Length[Li]}]]};
 	
-ListAllPartitions[gam_]:=Module[{m,unit,Li},
+P2ListAllPartitions[gam_]:=Module[{m,unit,Li},
 If[Plus@@gam==1, {{gam}},
 		m=Max[Select[Range[Length[gam]],gam[[#]]>0&]];
         unit=Table[If[i==m,1,0],{i,Length[gam]}];        
-	    Li=ListAllPartitions[gam-unit];
+	    Li=P2ListAllPartitions[gam-unit];
         Union[Map[Sort,
         Union[Flatten[
 				Table[Union[Flatten[{{Flatten[{Li[[i]],{unit}},1]},
@@ -710,7 +723,7 @@ If[Plus@@gam==1, {{gam}},
          ,1]]
 	]];
 
-BinarySplits[Nvec_]:=Module[{Li,Li1,Nl},
+P2BinarySplits[Nvec_]:=Module[{Li,Li1,Nl},
 If[Plus@@Nvec==1,Li1=Nvec,
 Li=Drop[Drop[Flatten[Table[Table[Nl[i],{i,Length[Nvec]}],Evaluate[Sequence@@Table[{Nl[i],0,Nvec[[i]]},{i,Length[Nvec]}]]],Length[Nvec]-1],1],-1];
 Li1=Take[Li,Ceiling[Length[Li]/2]];
@@ -987,6 +1000,11 @@ xmax=Min[xmax,TNum[[4,2]]];
 (*AppendTo[Diagram,Arrow[{TNum[[2]],TNum[[2]]+{-TNum[[1,1]],TNum[[1,2]]}/GCD@@(TNum[[1]])}]];
 AppendTo[Diagram,Text[TNum[[1]],TNum[[2]]+{-TNum[[1,1]],.2+TNum[[1,2]]}/GCD@@(TNum[[1]])]];*)
 ,{i,Length[TreeList]}];Show[Graphics[Diagram],Plot[1/2x^2,{x,xmin-.2,xmax+.2}]]];
+WallLine[{r_,d_,chi_},{rr_,dd_,cchi_}]:=Module[{s1,s2},
+(* wall in Li-Zhao coordinates *)
+s1=1/(2 dd r-2 d rr) (2 cchi r-3 dd r-2 chi rr+3 d rr+2 Sqrt[2 (dd r-d rr) (-cchi d+chi dd-dd r+d rr)+1/4 (2 cchi r-3 dd r-2 chi rr+3 d rr)^2]);
+s2=1/(2 dd r-2 d rr) (2 cchi r-3 dd r-2 chi rr+3 d rr-2 Sqrt[2 (dd r-d rr) (-cchi d+chi dd-dd r+d rr)+1/4 (2 cchi r-3 dd r-2 chi rr+3 d rr)^2]);
+Line[{{s1,1/2s1^2},{s2,1/2 s2^2}}]];
 
 
 PlotWallRay[{r_,d_,chi_},{rr_,dd_,cchi_},psi_,{L1_,L2_,H_}]:=Module[{R,ch2,cch2,x,xx,Di,Ddi,s},
@@ -1136,7 +1154,7 @@ McKayListAllTrees[Nvec_]:=Module[{LiTrees,LiTree1,LiTree2,Li},
 LiTrees={};
 If[Nvec[[1]]Nvec[[2]]==0&&Nvec[[2]]Nvec[[3]]==0&&Nvec[[3]]Nvec[[1]]==0,
 LiTrees={Nvec};,
-Li=Select[BinarySplits[Nvec],McKayDSZ[#,Nvec]!=0 &];
+Li=Select[P2BinarySplits[Nvec],McKayDSZ[#,Nvec]!=0 &];
 Do[
 LiTree2=McKayListAllTrees[Li[[i]]];
 LiTree1=McKayListAllTrees[Nvec-Li[[i]]];
@@ -1159,6 +1177,13 @@ McKayRay[{0,0,1},{1/2V+1/12,1/(2Sqrt[3])(1/2-V)},L{0,1},"\!\(\*SubscriptBox[\(\[
 Dashed,Line[2L{{-1,0},{1,0}}],Line[2L{{0,-1},{0,1}}],Dotted,
 Line[{{-1/2V+1/12,-1/(2Sqrt[3])(1/2+V)},{-1/6,V/Sqrt[3]},{1/2V+1/12,1/(2Sqrt[3])(1/2-V)},{-1/2V+1/12,-1/(2Sqrt[3])(1/2+V)}}]}
 ],AspectRatio->1,PlotRange->{3{-L,L},3{-L,L}}]];
+
+McKayInitialRays[L_]:=
+Graphics[{McKayRay[{1,0,0},{1,0},L{-1.7,1.7},"\!\(\*SubscriptBox[\(\[Gamma]\), \(1\)]\)"],
+McKayRay[{0,1,0},{-1/2,-Sqrt[3]/2},L{-1,1.4},"\!\(\*SubscriptBox[\(\[Gamma]\), \(2\)]\)"],
+McKayRay[{0,0,1},{-1/2,Sqrt[3]/2},L{-1.3,1.6},"\!\(\*SubscriptBox[\(\[Gamma]\), \(3\)]\)"],Dashed,
+Line[L{{-3,0},{5,0}}],Line[L{{0,-2.8},{0,3}}]}];
+
 
 
 (* ::Section:: *)
@@ -1223,9 +1248,9 @@ ApplyGamma13Lift[M_,tau_]:=If[Det[M]!=1 ||M[[1,2]]!=0||M[[1,3]]!=0 || Mod[M[[2,3
 MonodromyOnCharge[M_,{r_,d_,chi_}]:=If[Length[M]==0,{r,d,chi},If[
 Depth[M]==3,
 (* a single matrix *)
-ChToChi[{r,d,chi-r-3/2d} . {{0,0,-1},{0,1,0},{-1,0,0}} . Inverse[M] . {{0,0,-1},{0,1,0},{-1,0,0}}],
+ch2tochi[{r,d,chi-r-3/2d} . {{0,0,-1},{0,1,0},{-1,0,0}} . Inverse[M] . {{0,0,-1},{0,1,0},{-1,0,0}}],
 (* a list of matrices *)
-MonodromyOnCharge[Drop[M,1],ChToChi[{r,d,chi-r-3/2d} . {{0,0,-1},{0,1,0},{-1,0,0}} . Inverse[First[M]] . {{0,0,-1},{0,1,0},{-1,0,0}}]]]
+MonodromyOnCharge[Drop[M,1],ch2tochi[{r,d,chi-r-3/2d} . {{0,0,-1},{0,1,0},{-1,0,0}} . Inverse[First[M]] . {{0,0,-1},{0,1,0},{-1,0,0}}]]]
 ];
 
 MonodromyOnTau[M_,tau_]:=If[Length[M]==0,tau,If[
