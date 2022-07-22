@@ -53,17 +53,20 @@
  * - removed ChiToCh, ChToChi, FracPart
  * - renamed ChiToN,NToChi,repChN into chiton, ntochi, repChn
  * - renamed XyToSt, StToXy to xytost, sttoxy
- * - included HiggsBranchFormula and related routines from CoulombHiggs.m
- * - Added ScanAllTrees
+ * - Added ScanAllTrees, WallLine
  * - renamed McKayListAllConsistentTrees into McKayScanAllTrees
+ * - Added some routines from CoulombHiggs.m, prefaced by P2
+ * - Renamed Trees[] into LVTrees[]
  *********************************************************************)
  
 Print["P2Scattering 1.3 - A package for evaluating DT invariants on K_{P^2}"];
 
 
 BeginPackage["P2Scattering`"]
-(*Needs["CoulombHiggs`"] *)
 Needs["P2Scattering`"]
+Unprotect[y,tau];ClearAll[y,tau];
+(*Needs["CoulombHiggs`"] *)
+
 
 
 
@@ -73,7 +76,7 @@ Kr::usage = "\!\(\*SubscriptBox[\(Kr\), \(m_\)]\)[p_,q_] denotes the index of th
 \[Gamma]::usage = "\!\(\*SubscriptBox[\(\[Gamma]\), \(i\)]\) denotes the charge vector for the i-th node of the McKay quiver";
 a::usage = "Parameter running from 0 to 1";
 y::usage = "Refinement parameter";
-tau::usage = "Kahler modulus";
+tau::usage = "Kahler modulus"; 
 tau1::usage = "Real part of tau";
 tau2::usage = "Imaginary part of tau";
 gam1::usage = "Charge vector [r,d,chi) for E1[-1]=Ch[0][-1]";
@@ -81,7 +84,7 @@ gam2::usage = "Charge vector [r,d,chi) for E2[-1]=Ch[-1/2][0]";
 gam3::usage = "Charge vector [r,d,chi) for E3[-1]=Ch[-1][1]";
 
 (* global variables *)
-Trees::usage = "Trees[{r_,d_,chi_] gives the list of precomputed trees, when available";
+LVTrees::usage = "LVTrees[{r_,d_,chi_] gives the list of precomputed trees, when available";
 McKayTrees::usage = "McKayTrees[{n1_,n2_,n3_] gives the list of precomputed McKay trees, when available";
 ExcepSlopes::usage = "List of slopes of exceptional bundles between -3 and 4";
 ListSubsetsAny::usage = "Precomputed list of all binary splits of Range[n] for n=2..10, used by ListStableTrees";
@@ -138,6 +141,7 @@ ScattGraph::usage = "ScattGraph[Tree_] extracts the list of vertices and adjacen
 (* local scattering using large volume central charge *)
 xytost::usage = "xytost[{x_,y_}]:={x,Sqrt[x^2+2y]}";
 sttoxy::usage = "sttoxy[{s_,t_}]:={s,-1/2(s^2-t^2)}";
+xytosq::usage = "xytosq[{x_,y_}]:={x,y+x^2}";
 IntersectRays::usage = "IntersectRays[{r_,d_,chi_},{rr_,dd_,cchi_}] returns intersection point (x,y) of two rays, or {} if they are collinear;
   IntersectRays[{r_,d_,chi_},{rr_,dd_,cchi_},z_,zz_]returns intersection point (x,y) of two rays if the intersection point lies upward from z and z', or {} otherwise";  
 IntersectRaysSt::usage = "IntersectRaysSt[{r_,d_,chi_},{rr_,dd_,cchi_},psi_] returns intersection point (s,t) for rotated scattering rays, or {} if they are collinear";
@@ -280,14 +284,10 @@ StabilityWall::usage="StabilityWall[tree:{_,_},tauinit_,{amin_,amax_}] is a stab
 
 
 (* from CoulombHiggs *)
-P2HiggsBranchFormula::usage = "P2HiggsBranchFormula[Mat_,Cvec_,Nvec_] computes the Poincare polynomial of a quiver with DSZ matrix Mat, FI parameters Cvec, dimension vector Nvec using Reineke's formula. Accurate only for quivers without closed loops.";
+P2HiggsBranchFormula::usage = "P2HiggsBranchFormula[Mat_,Cvec_,Nvec_] computes the refined index of a quiver with DSZ matrix Mat, FI parameters Cvec, dimension vector Nvec using Reineke's formula. Assumes that the quiver has no oriented loops.";
+P2RationalInvariant::usage = "P2RationalInvariant[Mat_,Cvec_,Nvec_,y_] computes the rational invariant of a quiver with DSZ matrix Mat, dimension vector Nvec and FI parameters Cvec computed using Reineke's formula.";
 P2StackInvariant::usage = "P2StackInvariant[Mat_,Cvec_,Nvec_,y_] gives the stack invariant of a quiver with DSZ matrix Mat, dimension vector Nvec and FI parameters Cvec computed using Reineke's formula.";
-P2QFact::usage = "P2QFact[n_,y_] represents the unevaluated q-deformed Factorial ";
 P2QDeformedFactorial::usage = "P2QDeformedFactorial[n_,y_] gives the q-deformed factorial ";
-P2EvalQFact::usage = "P2EvalQFact[f_] replaces P2QFact[n_,y_] with P2QDeformedFactorial[n,y] everywhere in f ";
-P2EvalHiggsG::usage = "P2EvalHiggsG[Mat_,Cvec_,f_] evaluates any P2HiggsG[gam,y] appearing in f using Reineke's formula ";
-P2OmbToHiggsG::usage = "P2OmbToHiggsG[f_] expresses any P2Omb[gam,y] in f in terms of P2HiggsG[gam,y]";
-P2OmToOmb::usage = "P2OmToOmb[f_] expresses any P2Om[gam,y] in f in terms of P2Omb[gam,y]";
 P2ListAllPartitions::usage = "P2ListAllPartitions[gam_] returns the list of unordered partitions of the positive integer vector gam as a sum of positive integer vectors "; 
 P2BinarySplits::usage="P2BinarySplits[Nvec_] gives the list of dimension vectors which are smaller than Nvec/2";
 
@@ -434,8 +434,8 @@ If[Length[S1[[2]]]>0&&Length[S2[[2]]]>0,{S1[[1]]+S2[[1]],IntersectRays[S1[[1]]/.
 {S1[[1]]+S2[[1]],{}}]
 ]];
 
-ScattSort[LiTree_]:= (* sort trees by growing radius *)
-Map[#[[2]]&,SortBy[Table[{xytost[ScattCheck[LiTree[[i]]][[2]]][[2]],LiTree[[i]]},{i,Length[LiTree]}],N[First[#]]&]];
+ScattSort[LiTree_]:= (* sort trees by decreasing radius *)
+Reverse[Map[#[[2]]&,SortBy[Table[{xytost[ScattCheck[LiTree[[i]]][[2]]][[2]],LiTree[[i]]},{i,Length[LiTree]}],N[First[#]]&]]];
 
 
 
@@ -665,22 +665,23 @@ If[GCD@@(S1[[1]]+S2[[1]])!=1,Print["Beware, non-primitive state"]];
 EvaluateKronecker[f_]:=
 f/.Subscript[Kr, kappa_][g1_,g2_]:>Simplify[P2HiggsBranchFormula[{{0,kappa},{-kappa,0}},{1/g1,-1/g2},{g1,g2}]];
 
-(* taken from CoulombHiggs.m package *) 
+(* taken in part from CoulombHiggs.m package *) 
 P2HiggsBranchFormula[Mat_,Cvec_,Nvec_]:=Module[{Cvec0},
   If[Max[Nvec]<0,Print["P2HiggsBranchFormula: The dimension vector must be positive !"]];
   If[Plus@@Nvec==0,Return[0]];
   If[Plus@@Nvec==1,Return[1]];
   Cvec0=Cvec-(Plus@@(Nvec Cvec))/(Plus@@Nvec);
-  P2EvalQFact[P2EvalHiggsG[Mat,Cvec0,P2OmbToHiggsG[P2OmToOmb[P2Om[Nvec,y]]]]]
-];
-
-P2EvalQFact[f_]:=f/.{P2QFact[n_,y_]:>P2QDeformedFactorial[n,y]};
+DivisorSum[GCD@@Nvec,(y-1/y)/(y^#-1/y^#)/# MoebiusMu[#] P2RationalInvariant[Mat,Cvec0,Nvec/#,y^#]&]];
+P2RationalInvariant[Mat_,Cvec_,Nvec_,y_]:=Module[{Li,gcd},
+	gcd=GCD@@Nvec;
+	Li=Flatten[Map[Permutations,P2ListAllPartitions[{gcd}]],1];
+	Sum[
+	   Product[P2StackInvariant[Mat,Cvec,Nvec Li[[i,j,1]]/gcd,y],{j,Length[Li[[i]]]}]/Length[Li[[i]]]/(y-1/y)^(Length[Li[[i]]]-1),
+	{i,Length[Li]}]];
 
 P2QDeformedFactorial[n_,y_]:=If[n<0,Print["P2QDeformedFactorial[n,y] is defined only for n>=0"],
 		If[n==0,1,(y^(2n)-1)/(y^2-1)P2QDeformedFactorial[n-1,y]]];
 		
-P2EvalHiggsG[Mat_,Cvec_,f_]:=f/.{P2HiggsG[gam_,y_]:>P2StackInvariant[Mat,Cvec,gam,y]};
-
 P2StackInvariant[Mat_,Cvec_,Nvec_,y_]:=Module[{m,JKListAllPermutations,pa,Cvec0},
   m=Length[Nvec];
   If[Max[Nvec]<0,Print["P2StackInvariant: The dimension vector must be positive !"]];
@@ -694,17 +695,8 @@ P2StackInvariant[Mat_,Cvec_,Nvec_,y_]:=Module[{m,JKListAllPermutations,pa,Cvec0}
       (-1)^(Length[pa[[i]]]-1)
        y^(2 Sum[Max[ Mat[[l,k]],0] pa[[i,a,k]]pa[[i,b,l]],
     {a,1,Length[pa[[i]]]},{b,a,Length[pa[[i]]]},{k,m},{l,m}])/
-    Product[P2QFact[pa[[i,j,k]],y] ,{j,1,Length[pa[[i]]]},{k,m}],0],{i,Length[pa]}]
+    Product[P2QDeformedFactorial[pa[[i,j,k]],y] ,{j,1,Length[pa[[i]]]},{k,m}],0],{i,Length[pa]}]
 ];
-
-P2OmToOmb[f_]:=f/. {P2Om[gam_,y_]:>DivisorSum[GCD@@gam,(y-1/y)/(y^#-1/y^#)/# MoebiusMu[#] P2Omb[gam/#,y^#]&]};
-
-P2OmbToHiggsG[f_]:=f/.{P2Omb[gam_,y_]:>Module[{Li,gcd},
-	gcd=GCD@@gam;
-	Li=Flatten[Map[Permutations,P2ListAllPartitions[{gcd}]],1];
-	Sum[
-	   Product[P2HiggsG[gam Li[[i,j,1]]/gcd,y],{j,Length[Li[[i]]]}]/Length[Li[[i]]]/(y-1/y)^(Length[Li[[i]]]-1),
-	{i,Length[Li]}]]};
 	
 P2ListAllPartitions[gam_]:=Module[{m,unit,Li},
 If[Plus@@gam==1, {{gam}},
@@ -986,10 +978,11 @@ LiVertex=Union[Flatten[LiArrows,1]];
 ];
 
 
+xytosq[{x_,y_}]:={x,y+x^2};
 ScattDiagLZ[TreeList_]:=Module[{T,TNum,Diagram,xmin,xmax},
 (* Draw over diagram in Li-Zhao coordinates (s,q=y+s^2) plane for each tree in the list *)
 Diagram={};xmin={};xmax={};Do[
-T=ScattDiagInternal[TreeList[[i]]]/.{Text[t_,{x_,y_}]:>Text[t,{x+.5Sign[x],1/2x^2}],Arrow[{{x1_,y1_},{x2_,y2_}}]:>Arrow[{XyToSq[{x1,y1}],XyToSq[{x2,y2}]}]};
+T=ScattDiagInternal[TreeList[[i]]]/.{Text[t_,{x_,y_}]:>Text[t,{x+.5Sign[x],1/2x^2}],Arrow[{{x1_,y1_},{x2_,y2_}}]:>Arrow[{xytosq[{x1,y1}],xytosq[{x2,y2}]}]};
 TNum=T/.repCh;
 AppendTo[Diagram,TreeHue[Length[TreeList],i]];
 AppendTo[Diagram,T[[3]]];
@@ -1469,75 +1462,75 @@ RayFromInfinity[gamma:{r_,d_,chi_},psi_]:=
 
 
 (* ::Section:: *)
-(*Precomputed list of scattering trees for D(P^2)*)
+(*Precomputed list of scattering trees at large volume*)
 
 
 (* ::Input:: *)
 (**)
 
 
-Trees[{0,1,1}]={{-Ch[-1],Ch[0]}};
-Trees[{0,2,0}]={{-2Ch[-2],2Ch[-1]}};
-Trees[{0,2,1}]={{-Ch[-2],Ch[0]}};
-Trees[{0,3,0}]={{-3Ch[-2],3Ch[-1]},{-Ch[-3],Ch[0]}};
-Trees[{0,3,1}]={{{-2Ch[-2],Ch[-1]},Ch[0]}};
-Trees[{0,4,0}]={{-4Ch[-2],4Ch[-1]},
+LVTrees[{0,1,1}]={{-Ch[-1],Ch[0]}};
+LVTrees[{0,2,0}]={{-2Ch[-2],2Ch[-1]}};
+LVTrees[{0,2,1}]={{-Ch[-2],Ch[0]}};
+LVTrees[{0,3,0}]={{-3Ch[-2],3Ch[-1]},{-Ch[-3],Ch[0]}};
+LVTrees[{0,3,1}]={{{-2Ch[-2],Ch[-1]},Ch[0]}};
+LVTrees[{0,4,0}]={{-4Ch[-2],4Ch[-1]},
 {-Ch[-3],{{-Ch[-2],Ch[-1]},Ch[0]}}};
-Trees[{0,4,1}]={{{-3Ch[-2],2Ch[-1]},Ch[0]},
+LVTrees[{0,4,1}]={{{-3Ch[-2],2Ch[-1]},Ch[0]},
 {-Ch[-3],{-Ch[-1],2Ch[0]}}};
-Trees[{0,4,2}]={{-2Ch[-2],2Ch[0]},
+LVTrees[{0,4,2}]={{-2Ch[-2],2Ch[0]},
 {{-2Ch[-2],Ch[-1]},{-Ch[-1],2Ch[0]}},
 {-Ch[-3],Ch[1]}};
-Trees[{0,5,0}]={{-5Ch[-2],5Ch[-1]},
+LVTrees[{0,5,0}]={{-5Ch[-2],5Ch[-1]},
 {-Ch[-3],{{-2Ch[-2],2Ch[-1]},Ch[0]}},
 {{-2Ch[-3],Ch[-2]},{-Ch[-1],2Ch[0]}},
 {-Ch[-4],Ch[1]}};
-Trees[{0,5,1}]={{{-4Ch[-2],3Ch[-1]},Ch[0]},
+LVTrees[{0,5,1}]={{{-4Ch[-2],3Ch[-1]},Ch[0]},
 {-Ch[-3],{-Ch[-2],2Ch[0]}},
 {{-Ch[-3],{-Ch[-2],Ch[-1]}},{-Ch[-1],2Ch[0]}},
 {{-2Ch[-3],Ch[-2]},Ch[1]}};
-Trees[{0,5,3}]={{-2 Ch[-2],{-Ch[-1],3 Ch[0]}},
+LVTrees[{0,5,3}]={{-2 Ch[-2],{-Ch[-1],3 Ch[0]}},
 {{-2 Ch[-2],Ch[0]},{-Ch[-1],2 Ch[0]}},
 {{-2 Ch[-2],Ch[-1]},{-2 Ch[-1],3 Ch[0]}},
 {{-3 Ch[-2],2 Ch[-1]},Ch[1]},
 {-Ch[-3],{{-Ch[-1],Ch[0]},Ch[1]}}};
-Trees[{0,6,1}]={{{-5 Ch[-2],4 Ch[-1]},Ch[0]},{-Ch[-3],{{-2 Ch[-2],Ch[-1]},2 Ch[0]}},{{-Ch[-3],{-Ch[-2],Ch[-1]}},{-Ch[-2],2 Ch[0]}},{{-Ch[-3],{-2 Ch[-2],2 Ch[-1]}},{-Ch[-1],2 Ch[0]}},{{-2 Ch[-3],Ch[-2]},{-2 Ch[-1],3 Ch[0]}},{{{-2 Ch[-3],Ch[-2]},{-Ch[-2],Ch[-1]}},Ch[1]},{{-2 Ch[-3],Ch[-1]},Ch[1]},{-Ch[-4],{{-Ch[-1],Ch[0]},Ch[1]}}};(* some tree is missing for (0,7,1) *)
-Trees[{0,7,1}]={{{-6 Ch[-2],5 Ch[-1]},Ch[0]},{-2 Ch[-3],{-Ch[-1],3 Ch[0]}},{-Ch[-3],{{-3 Ch[-2],2 Ch[-1]},2 Ch[0]}},{{-Ch[-3],{-2 Ch[-2],2 Ch[-1]}},{-Ch[-2],2 Ch[0]}},{{-2 Ch[-3],Ch[0]},{-Ch[-1],2 Ch[0]}},{{-Ch[-3],{-3 Ch[-2],3 Ch[-1]}},{-Ch[-1],2 Ch[0]}},{{-2 Ch[-3],Ch[-2]},{-Ch[-2],{-Ch[-1],3 Ch[0]}}},{{-2 Ch[-3],Ch[-2]},{{-Ch[-2],Ch[0]},{-Ch[-1],2 Ch[0]}}},{{-2 Ch[-3],Ch[-1]},{-2 Ch[-1],3 Ch[0]}},{{{-2 Ch[-3],Ch[-2]},{-Ch[-2],Ch[-1]}},{-2 Ch[-1],3 Ch[0]}},{{-2 Ch[-3],{-Ch[-2],2 Ch[-1]}},Ch[1]},{{{-2 Ch[-3],Ch[-2]},{-2 Ch[-2],2 Ch[-1]}},Ch[1]},{-Ch[-4],{{-Ch[-2],Ch[0]},Ch[1]}},{{-Ch[-4],{-Ch[-2],Ch[-1]}},{{-Ch[-1],Ch[0]},Ch[1]}},{{-3 Ch[-3],2 Ch[-2]},{{-Ch[-1],Ch[0]},Ch[1]}},{{-Ch[-4],{-Ch[-3],Ch[-2]}},{-Ch[0],2 Ch[1]}},{{-2 Ch[-4],Ch[-3]},Ch[2]}};
+LVTrees[{0,6,1}]={{{-5 Ch[-2],4 Ch[-1]},Ch[0]},{-Ch[-3],{{-2 Ch[-2],Ch[-1]},2 Ch[0]}},{{-Ch[-3],{-Ch[-2],Ch[-1]}},{-Ch[-2],2 Ch[0]}},{{-Ch[-3],{-2 Ch[-2],2 Ch[-1]}},{-Ch[-1],2 Ch[0]}},{{-2 Ch[-3],Ch[-2]},{-2 Ch[-1],3 Ch[0]}},{{{-2 Ch[-3],Ch[-2]},{-Ch[-2],Ch[-1]}},Ch[1]},{{-2 Ch[-3],Ch[-1]},Ch[1]},{-Ch[-4],{{-Ch[-1],Ch[0]},Ch[1]}}};(* some tree is missing for (0,7,1) *)
+LVTrees[{0,7,1}]={{{-6 Ch[-2],5 Ch[-1]},Ch[0]},{-2 Ch[-3],{-Ch[-1],3 Ch[0]}},{-Ch[-3],{{-3 Ch[-2],2 Ch[-1]},2 Ch[0]}},{{-Ch[-3],{-2 Ch[-2],2 Ch[-1]}},{-Ch[-2],2 Ch[0]}},{{-2 Ch[-3],Ch[0]},{-Ch[-1],2 Ch[0]}},{{-Ch[-3],{-3 Ch[-2],3 Ch[-1]}},{-Ch[-1],2 Ch[0]}},{{-2 Ch[-3],Ch[-2]},{-Ch[-2],{-Ch[-1],3 Ch[0]}}},{{-2 Ch[-3],Ch[-2]},{{-Ch[-2],Ch[0]},{-Ch[-1],2 Ch[0]}}},{{-2 Ch[-3],Ch[-1]},{-2 Ch[-1],3 Ch[0]}},{{{-2 Ch[-3],Ch[-2]},{-Ch[-2],Ch[-1]}},{-2 Ch[-1],3 Ch[0]}},{{-2 Ch[-3],{-Ch[-2],2 Ch[-1]}},Ch[1]},{{{-2 Ch[-3],Ch[-2]},{-2 Ch[-2],2 Ch[-1]}},Ch[1]},{-Ch[-4],{{-Ch[-2],Ch[0]},Ch[1]}},{{-Ch[-4],{-Ch[-2],Ch[-1]}},{{-Ch[-1],Ch[0]},Ch[1]}},{{-3 Ch[-3],2 Ch[-2]},{{-Ch[-1],Ch[0]},Ch[1]}},{{-Ch[-4],{-Ch[-3],Ch[-2]}},{-Ch[0],2 Ch[1]}},{{-2 Ch[-4],Ch[-3]},Ch[2]}};
 (* Hilbert scheme of points *)
-Trees[{1,0,0}]={{-Ch[-2],2Ch[-1]}};
-Trees[{1,0,-1}]={{{-Ch[-3],Ch[-2]},Ch[-1]}};
-Trees[{1,0,-2}]={{{-Ch[-4],Ch[-3]},Ch[-1]},{-2Ch[-3],3Ch[-2]}};
-Trees[{1,0,-3}]={{{-Ch[-5],Ch[-4]},Ch[-1]},{{-Ch[-4],Ch[-3]},{-Ch[-3],2Ch[-2]}},{-Ch[-4],2Ch[-2]}};
-Trees[{1,0,-4}]={{{-Ch[-6],Ch[-5]},Ch[-1]},{{-Ch[-5],Ch[-4]},{-Ch[-3],2Ch[-2]}},{{-2Ch[-4],2Ch[-3]},Ch[-2]}};
-Trees[{1,0,-5}]={{{-Ch[-7],Ch[-6]},Ch[-1]},{{-Ch[-6],Ch[-5]},{-Ch[-3],2 Ch[-2]}},{{-Ch[-5],Ch[-4]},{{-Ch[-4],Ch[-3]},Ch[-2]}},{{-Ch[-5],Ch[-3]},Ch[-2]},{-3 Ch[-4],4 Ch[-3]}};
-Trees[{1,0,-6}]={{{-Ch[-8],Ch[-7]},Ch[-1]},{{-Ch[-7],Ch[-6]},{-Ch[-3],2 Ch[-2]}},{{-Ch[-6],Ch[-5]},{{-Ch[-4],Ch[-3]},Ch[-2]}},{{-2 Ch[-5],2 Ch[-4]},Ch[-2]},{{-Ch[-5],Ch[-4]},{-2 Ch[-4],3 Ch[-3]}},{{-Ch[-5],Ch[-3]},{-Ch[-4],2 Ch[-3]}},{-Ch[-5],{-Ch[-4],3 Ch[-3]}}};
-Trees[{1,0,-7}]={{{-Ch[-9],Ch[-8]},Ch[-1]},{{-Ch[-8],Ch[-7]},{-Ch[-3],2 Ch[-2]}},{{-Ch[-7],Ch[-6]},{{-Ch[-4],Ch[-3]},Ch[-2]}},{{-Ch[-6],Ch[-5]},{{-Ch[-5],Ch[-4]},Ch[-2]}},{{-Ch[-6],Ch[-5]},{-2 Ch[-4],3 Ch[-3]}},{{-Ch[-6],Ch[-4]},Ch[-2]},{{-2 Ch[-5],2 Ch[-4]},{-Ch[-4],2 Ch[-3]}},{{-Ch[-5],2 Ch[-3]},{-Ch[-5],Ch[-4]}},{{-2 Ch[-5],Ch[-4]},2 Ch[-3]}};
-Trees[{1,0,-8}]={{{-Ch[-10],Ch[-9]},Ch[-1]},{{-Ch[-9],Ch[-8]},{-Ch[-3],2 Ch[-2]}},{{-Ch[-8],Ch[-7]},{{-Ch[-4],Ch[-3]},Ch[-2]}},{{-Ch[-7],Ch[-6]},{{-Ch[-5],Ch[-4]},Ch[-2]}},{{-Ch[-7],Ch[-6]},{-2 Ch[-4],3 Ch[-3]}},{{-2 Ch[-6],2 Ch[-5]},Ch[-2]},{{-Ch[-6],Ch[-5]},{-Ch[-5],2 Ch[-3]}},{{-Ch[-6],Ch[-5]},{{-Ch[-5],Ch[-4]},{-Ch[-4],2 Ch[-3]}}},{{-Ch[-6],Ch[-4]},{-Ch[-4],2 Ch[-3]}},{-Ch[-6],2 Ch[-3]},{{-3 Ch[-5],3 Ch[-4]},Ch[-3]}};
+LVTrees[{1,0,0}]={{-Ch[-2],2Ch[-1]}};
+LVTrees[{1,0,-1}]={{{-Ch[-3],Ch[-2]},Ch[-1]}};
+LVTrees[{1,0,-2}]={{{-Ch[-4],Ch[-3]},Ch[-1]},{-2Ch[-3],3Ch[-2]}};
+LVTrees[{1,0,-3}]={{{-Ch[-5],Ch[-4]},Ch[-1]},{{-Ch[-4],Ch[-3]},{-Ch[-3],2Ch[-2]}},{-Ch[-4],2Ch[-2]}};
+LVTrees[{1,0,-4}]={{{-Ch[-6],Ch[-5]},Ch[-1]},{{-Ch[-5],Ch[-4]},{-Ch[-3],2Ch[-2]}},{{-2Ch[-4],2Ch[-3]},Ch[-2]}};
+LVTrees[{1,0,-5}]={{{-Ch[-7],Ch[-6]},Ch[-1]},{{-Ch[-6],Ch[-5]},{-Ch[-3],2 Ch[-2]}},{{-Ch[-5],Ch[-4]},{{-Ch[-4],Ch[-3]},Ch[-2]}},{{-Ch[-5],Ch[-3]},Ch[-2]},{-3 Ch[-4],4 Ch[-3]}};
+LVTrees[{1,0,-6}]={{{-Ch[-8],Ch[-7]},Ch[-1]},{{-Ch[-7],Ch[-6]},{-Ch[-3],2 Ch[-2]}},{{-Ch[-6],Ch[-5]},{{-Ch[-4],Ch[-3]},Ch[-2]}},{{-2 Ch[-5],2 Ch[-4]},Ch[-2]},{{-Ch[-5],Ch[-4]},{-2 Ch[-4],3 Ch[-3]}},{{-Ch[-5],Ch[-3]},{-Ch[-4],2 Ch[-3]}},{-Ch[-5],{-Ch[-4],3 Ch[-3]}}};
+LVTrees[{1,0,-7}]={{{-Ch[-9],Ch[-8]},Ch[-1]},{{-Ch[-8],Ch[-7]},{-Ch[-3],2 Ch[-2]}},{{-Ch[-7],Ch[-6]},{{-Ch[-4],Ch[-3]},Ch[-2]}},{{-Ch[-6],Ch[-5]},{{-Ch[-5],Ch[-4]},Ch[-2]}},{{-Ch[-6],Ch[-5]},{-2 Ch[-4],3 Ch[-3]}},{{-Ch[-6],Ch[-4]},Ch[-2]},{{-2 Ch[-5],2 Ch[-4]},{-Ch[-4],2 Ch[-3]}},{{-Ch[-5],2 Ch[-3]},{-Ch[-5],Ch[-4]}},{{-2 Ch[-5],Ch[-4]},2 Ch[-3]}};
+LVTrees[{1,0,-8}]={{{-Ch[-10],Ch[-9]},Ch[-1]},{{-Ch[-9],Ch[-8]},{-Ch[-3],2 Ch[-2]}},{{-Ch[-8],Ch[-7]},{{-Ch[-4],Ch[-3]},Ch[-2]}},{{-Ch[-7],Ch[-6]},{{-Ch[-5],Ch[-4]},Ch[-2]}},{{-Ch[-7],Ch[-6]},{-2 Ch[-4],3 Ch[-3]}},{{-2 Ch[-6],2 Ch[-5]},Ch[-2]},{{-Ch[-6],Ch[-5]},{-Ch[-5],2 Ch[-3]}},{{-Ch[-6],Ch[-5]},{{-Ch[-5],Ch[-4]},{-Ch[-4],2 Ch[-3]}}},{{-Ch[-6],Ch[-4]},{-Ch[-4],2 Ch[-3]}},{-Ch[-6],2 Ch[-3]},{{-3 Ch[-5],3 Ch[-4]},Ch[-3]}};
 (*  higher rank D4-D2-D0 *)
-Trees[{2,-1,0}]={{-Ch[-2],3Ch[-1]}};
-Trees[{2,-1,-1}]={{{-Ch[-3],Ch[-2]},2Ch[-1]}};
-Trees[{2,-1,-2}]={{{-Ch[-4],Ch[-3]},2Ch[-1]},{{-2Ch[-3],3Ch[-2]},Ch[-1]}};
-Trees[{2,-1,-3}]={{{-Ch[-5],Ch[-4]},2 Ch[-1]},{{{-Ch[-4],Ch[-3]},{-Ch[-3],2 Ch[-2]}},Ch[-1]},{{-Ch[-4],2 Ch[-2]},Ch[-1]},{-3 Ch[-3],5 Ch[-2]}};
-Trees[{2,0,0}]={{-2Ch[-2],4Ch[-1]}};
-Trees[{2,0,-1}]={{-Ch[-3],3Ch[-1]},{{-Ch[-3],Ch[-2]},{-Ch[-2],3 Ch[-1]}}};
-Trees[{2,0,-2}]={{{-Ch[-4],Ch[-3]},{-Ch[-2],3 Ch[-1]}},{{-2 Ch[-3],2 Ch[-2]},2 Ch[-1]}};
-Trees[{3,-1,0}]={{-2 Ch[-2],5 Ch[-1]}};
-Trees[{3,-1,-1}]={{{{-Ch[-3],Ch[-2]},Ch[-1]},{-Ch[-2],3 Ch[-1]}},{{-Ch[-3],Ch[-2]},{-Ch[-2],4 Ch[-1]}},{-Ch[-3],4 Ch[-1]}};
-Trees[{3,-1,-2}]={{{-2 Ch[-3],2 Ch[-2]},3 Ch[-1]},
+LVTrees[{2,-1,0}]={{-Ch[-2],3Ch[-1]}};
+LVTrees[{2,-1,-1}]={{{-Ch[-3],Ch[-2]},2Ch[-1]}};
+LVTrees[{2,-1,-2}]={{{-Ch[-4],Ch[-3]},2Ch[-1]},{{-2Ch[-3],3Ch[-2]},Ch[-1]}};
+LVTrees[{2,-1,-3}]={{{-Ch[-5],Ch[-4]},2 Ch[-1]},{{{-Ch[-4],Ch[-3]},{-Ch[-3],2 Ch[-2]}},Ch[-1]},{{-Ch[-4],2 Ch[-2]},Ch[-1]},{-3 Ch[-3],5 Ch[-2]}};
+LVTrees[{2,0,0}]={{-2Ch[-2],4Ch[-1]}};
+LVTrees[{2,0,-1}]={{-Ch[-3],3Ch[-1]},{{-Ch[-3],Ch[-2]},{-Ch[-2],3 Ch[-1]}}};
+LVTrees[{2,0,-2}]={{{-Ch[-4],Ch[-3]},{-Ch[-2],3 Ch[-1]}},{{-2 Ch[-3],2 Ch[-2]},2 Ch[-1]}};
+LVTrees[{3,-1,0}]={{-2 Ch[-2],5 Ch[-1]}};
+LVTrees[{3,-1,-1}]={{{{-Ch[-3],Ch[-2]},Ch[-1]},{-Ch[-2],3 Ch[-1]}},{{-Ch[-3],Ch[-2]},{-Ch[-2],4 Ch[-1]}},{-Ch[-3],4 Ch[-1]}};
+LVTrees[{3,-1,-2}]={{{-2 Ch[-3],2 Ch[-2]},3 Ch[-1]},
 {{-Ch[-4],Ch[-3]},{-Ch[-2],4 Ch[-1]}},
 {{-Ch[-2],3 Ch[-1]},{-2 Ch[-3],3 Ch[-2]}}};
-Trees[{3,-1,-3}]={{2 Ch[-1],{-3 Ch[-3],4 Ch[-2]}},
+LVTrees[{3,-1,-3}]={{2 Ch[-1],{-3 Ch[-3],4 Ch[-2]}},
 {{-Ch[-4],Ch[-2]},3 Ch[-1]}};
 (* trees are missing for (3,-1,-4), considered in Coskun Huizenga Woolf ex 7.7 *)
-Trees[{3,-1,-4}]={{Ch[-1],{-4 Ch[-3],6 Ch[-2]}},
+LVTrees[{3,-1,-4}]={{Ch[-1],{-4 Ch[-3],6 Ch[-2]}},
 {2 Ch[-1],{-Ch[-4],{-Ch[-3],3 Ch[-2]}}},
 {{-2 Ch[-4],2 Ch[-3]},3 Ch[-1]},
 {{-Ch[-6],Ch[-5]},{-Ch[-2],4 Ch[-1]}}};
-Trees[{3,1,4}]={{{-Ch[-1],3Ch[0]},Ch[0]},{-Ch[-1],4Ch[0]}};
-Trees[{3,1,3}]={{{-Ch[-2],Ch[-1]},3 Ch[0]}};
-Trees[{3,1,2}]={{2 Ch[0],{-2 Ch[-2],3 Ch[-1]}},{{-Ch[-3],Ch[-2]},3 Ch[0]}};
-Trees[{3,0,0}]={{-3 Ch[-2],6 Ch[-1]}};
-Trees[{3,0,-1}]={{{-Ch[-3],Ch[-2]},{-2 Ch[-2],5 Ch[-1]}},{{-Ch[-3],2 Ch[-1]},{-Ch[-2],3 Ch[-1]}}};
+LVTrees[{3,1,4}]={{{-Ch[-1],3Ch[0]},Ch[0]},{-Ch[-1],4Ch[0]}};
+LVTrees[{3,1,3}]={{{-Ch[-2],Ch[-1]},3 Ch[0]}};
+LVTrees[{3,1,2}]={{2 Ch[0],{-2 Ch[-2],3 Ch[-1]}},{{-Ch[-3],Ch[-2]},3 Ch[0]}};
+LVTrees[{3,0,0}]={{-3 Ch[-2],6 Ch[-1]}};
+LVTrees[{3,0,-1}]={{{-Ch[-3],Ch[-2]},{-2 Ch[-2],5 Ch[-1]}},{{-Ch[-3],2 Ch[-1]},{-Ch[-2],3 Ch[-1]}}};
 (* McKay trees *)
 McKayTrees[{0,1,1}]={{{0,1,0},{0,0,1}}};
 McKayTrees[{1,2,1}]={{{{1,0,0},{0,2,0}},{0,0,1}}};
