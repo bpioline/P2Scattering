@@ -62,11 +62,14 @@
 Print["P2Scattering 1.3 - A package for evaluating DT invariants on K_{P^2}"];
 
 
-BeginPackage["P2Scattering`"]
-Needs["P2Scattering`"]
-Unprotect[y,tau];ClearAll[y,tau];
-(*Needs["CoulombHiggs`"] *)
+BeginPackage["IndexVars`"];
+Protect[tau, y];
+EndPackage[];
 
+BeginPackage["P2Scattering`"]
+(* Needs["P2Scattering`"] *)
+(*Needs["CoulombHiggs`"] *)
+Needs["IndexVars`"]
 
 
 
