@@ -2,9 +2,9 @@
 
 (*********************************************************************
  *
- *  P2Scattering.m 1.3           
+ *  P2Scattering.m 1.4         
  *                                                          
- *  Copyright TopStringDT research group, June 2022
+ *  Developed by Bruno Le Floch and Boris Pioline, October 2022
  *
  *  Distributed under the terms of the GNU General Public License 
  *
@@ -57,9 +57,18 @@
  * - renamed McKayListAllConsistentTrees into McKayScanAllTrees
  * - Added some routines from CoulombHiggs.m, prefaced by P2
  * - Renamed Trees[] into LVTrees[]
+ * - Added Package IndexVars` to share variables with CoulombHiggs.m
+ * - Changes in TreeToRaysPlot and TreeToRaysch2
+ * - Fixed bug in ScanBinarySplits, changed its arguments
+ * - Added constraint k[i]>=k[i-1] when m[i]==m[i-1] in ScanConstituents, similarly for kp
+ * - Modified ListStableTreesPerturb such that only on chi is perturbed
+ * 1.4
+ * - Added BinaryTreeIndex,BinaryTreeIndexInternal,AbelianizedScatteringSequence,
+ * - Added IndexFromAbelianizedSequences, IndexFromSequences
+ * - Fixed ScanKroneckerSplits, ScanConstituents
  *********************************************************************)
  
-Print["P2Scattering 1.3 - A package for evaluating DT invariants on K_{P^2}"];
+Print["P2Scattering 1.4 - A package for evaluating DT invariants on \!\(\*SubscriptBox[K,SuperscriptBox[\[DoubleStruckCapitalP],2]]\)"];
 
 
 BeginPackage["IndexVars`"];
@@ -67,8 +76,6 @@ Protect[tau, y];
 EndPackage[];
 
 BeginPackage["P2Scattering`"]
-(* Needs["P2Scattering`"] *)
-(*Needs["CoulombHiggs`"] *)
 Needs["IndexVars`"]
 
 
@@ -125,7 +132,7 @@ FracPart::usage = "FracPart[x_]:= x - Ceiling[x]";
 ExcepToChi::usage = "ExcepToChi[mu_] gives the Chern vector [r,d,chi) of exceptional bundle of slope mu";
 
 (* Large volume central charge, walls of marginal stability *)
-ZLV::usage = "ZLV[{r_,d_,chi_},{s_,t_}] computes the standard central charge -1/2 r (s+I t)^2+d (s+I t)-(r-3/2d-chi)";
+ZLV::usage = "ZLV[{r_,d_,chi_},{s_,t_}] computes the standard central charge -1/2 r (s+I t)^2+d (s+I t)+r+3d/2-chi";
 ZLVch2::usage = "ZLVch2[{r_,d_,ch2_},{s_,t_}] computes the central charge -1/2 r (s+I t)^2+d (s+I t)-ch2";
 Wall::usage = "Wall[{r_,d_,chi_},{rr_,dd_,cchi_},{s_,t_}] computes Im[Z[gamma] Conjugate[Z[ggamma]]";
 Wallch2::usage = "Wallch2[{r_,d_,ch2_},{rr_,dd_,cch2_},{s_,t_}] computes Im[Z[gamma] Conjugate[Z[ggamma]]";
@@ -157,10 +164,10 @@ Raysch2::usage = "Raysch2[{r_,d_,ch2_},t_,psi_] computes  s(t) for the ray Re[E^
 
 (* constructing scattering trees *)
 ListStableTrees::usage = "ListStableTrees[LiCh_,{s0_,t0_}] constructs consistent trees from constituents list LiCh={k_i Ch[m_i]}, which are stable at (s0,t0)";
-ListStableTreesPerturb::usage = "ListStableTrees[LiCh_,{s0_,t0_}] constructs consistent trees from constituents list LiCh={k_i Ch[m_i]} which are stable at (s0,t0) after perturbing  the m_i's";
+ListStableTreesPerturb::usage = "ListStableTrees[LiCh_,{s0_,t0_}] constructs consistent trees from constituents list LiCh={k_i Ch[m_i]} which are stable at (s0,t0) after perturbing  the chi_i's";
 ListStablePlanarTrees::usage = "ListStablePlanarTrees[LiCh_,{s0_,t0_}] constructs consistent planar trees from ordered constituents list LiCh={k_i Ch[m_i]}, which are stable at (s0,t0)";
 ScanConstituents::usage = "ScanConstituents[gam_,{m0min_,m0max_},{nmin_,nmax_},phimax_] searches possible list of constituents  with slope in [m0min,m0max], number of constituents in [nmin,nmax], cost function less than phimax and charges adding up to gam";
-ScanBinarySplits::usage = "ScanBinarySplits[{r_,d_,chi_},{s0_,t0_}] produces list of {rr,dd,cchi} such that {r,d,chi} can split into {rr,dd,cchi}+{r-rr,d-dd,chi-cchi} along the ray starting at (s0,t0)";
+ScanBinarySplits::usage = "ScanBinarySplits[{r_,d_,chi_},t_] produces list of {rr,dd,cchi} such that {r,d,chi} can split into {rr,dd,cchi}+{r-rr,d-dd,chi-cchi} along the ray with psi=0 starting at height t";
 ScanKroneckerSplits::usage = "ScanKroneckerSplits[{r_,d_,chi_}] produces list of {-k' Ch(m'), k Ch(m)} such that each doublet adds up to {r,d,chi}";
 ScanAllTrees::usage = "ScanAllTrees[{r_,d_,chi_},{s0_,t0_}] constructs all possible trees with charges adding up to [r,d,chi) leading to an outgoing ray through the point (s,t)";
 
@@ -169,6 +176,12 @@ ScanAllTrees::usage = "ScanAllTrees[{r_,d_,chi_},{s0_,t0_}] constructs all possi
 ScattIndex::usage = "ScattIndex[TreeList_] computes the index for each tree in TreeList; do not trust the result if internal lines have non-primitive charges";
 ScattIndexInternal::usage = "ScattIndexInternal[Tree_] computes {total charge, list of Kronecker indices associated to each vertex in Tree}";
 EvaluateKronecker::usage = "EvaluateKronecker[f_] replaces each \!\(\*SubscriptBox[\(Kr\), \(m_\)]\)[p_,q_] with the index of the Kronecker quiver with m arrows and dimension vector {p,q}, using CoulombHiggs package";
+BinaryTreeIndex::usage="BinaryTreeIndex[TreeList_] computes the index of each binary tree in TreeList";
+BinaryTreeIndexInternal::usage="BinaryTreeIndexInternal[Tree_] produces a list of wall-crossing factors from each vertex in a binary tree";
+AbelianizedScatteringSequence::usage ="AbelianizedScatteringSequence[ScattSeq_] produces a list of abelianized constituents, by replacing each kO[m] by {k_i O[m]} where k_i runs over integer partitions of k";
+IndexFromAbelianizedSequences::usage ="IndexFromAbelianizedSequences[LiAbelianized_,{s0_,t0_}] constructs all possible perturbed binary trees from constituents in LiAbelianized which are stable for ZLV[gam,{s0,t0}], and compute the contribution to the index from each of them";
+IndexFromSequences::usage="IndexFromSequences[LiScattSeq_,{s0_,t0_}] constructs all possible lists of abelianized constituents from the list of scattering sequences LiScattSeq, removes duplicates, and applies IndexFromAbelianizedSequences on each of them";
+
 
 (* plotting routines *)
 TreeHue::usage= "TreeHue[i_,n_] specifies the color for the i-th tree among a list of n";
@@ -375,7 +388,7 @@ repKr=Subscript[Kr, m_][p_,q_]:>1;
 (*Large volume central charge, walls of marginal stability*)
 
 
-ZLV[{r_,d_,chi_},{s_,t_}]:=-1/2 (s+I t)^2 r+ (s+I t) d-(r-3/2 d-chi);
+ZLV[{r_,d_,chi_},{s_,t_}]:=-1/2 (s+I t)^2 r+ (s+I t) d+r+3d/2-chi;
 ZLVch2[{r_,d_,ch2_},{s_,t_}]:=-1/2 (s+I t)^2 r+ (s+I t) d-ch2;
 Wall[{r_,d_,chi_},{rr_,dd_,cchi_},{s_,t_}]:=2 cchi (d-r s)-2 chi (dd-rr s)+(dd r-d rr) (2+3 s+s^2+t^2);
 Wallch2[{r_,d_,ch2_},{rr_,dd_,cch2_},{s_,t_}]:=(s^2+t^2)(r dd-rr d)-2s (r cch2-rr ch2)+2(d cch2-dd ch2);
@@ -460,7 +473,9 @@ Module[{zi},If[(r dd-rr d!=0) ,zi={(2 cchi r-3 dd r-2 chi rr+3 d rr)/(2 dd r-2 d
 If[(zi-z) . {-r,d}>=0&&(zi-zz) . {-rr,dd}>=0,zi,{}]]];
 
 IntersectRaysSt[{r_,d_,chi_},{rr_,dd_,cchi_},psi_]:=
-(* returns (s,t) coordinate of intersection point of two rays, or {} if they are collinear *)If[(r dd-rr d!=0) ,If[TestBranch[{r,d,chi},(2 cchi r-3 dd r-2 chi rr+3 d rr)/(2 dd r-2 d rr)]&&TestBranch[{rr,dd,cchi},(2 cchi r-3 dd r-2 chi rr+3 d rr)/(2 dd r-2 d rr)],{(2 cchi r-3 dd r-2 chi rr+3 d rr)/(2 dd r-2 d rr)-1/2Sin[psi]/Abs[r dd-rr d]\[Sqrt](4 cchi^2 r^2+4 chi^2 rr^2+4 chi (2 dd+3 rr) (dd r-d rr)+(dd r-d rr)^2+4 cchi (-2 d dd r-3 dd r^2+2 d^2 rr-2 chi r rr+3 d r rr)),1/2Cos[psi] /Abs[r dd-rr d]\[Sqrt](4 cchi^2 r^2+4 chi^2 rr^2+4 chi (2 dd+3 rr) (dd r-d rr)+(dd r-d rr)^2+4 cchi (-2 d dd r-3 dd r^2+2 d^2 rr-2 chi r rr+3 d r rr))},{}]];
+(* returns (s,t) coordinate of intersection point of two rays, or {} if they are collinear *)
+If[(r dd-rr d!=0) ,If[TestBranch[{r,d,chi},(2 cchi r-3 dd r-2 chi rr+3 d rr)/(2 dd r-2 d rr)]&&TestBranch[{rr,dd,cchi},(2 cchi r-3 dd r-2 chi rr+3 d rr)/(2 dd r-2 d rr)],{(2 cchi r-3 dd r-2 chi rr+3 d rr)/(2 dd r-2 d rr)-1/2Sin[psi]/Abs[r dd-rr d]\[Sqrt](4 cchi^2 r^2+4 chi^2 rr^2+4 chi (2 dd+3 rr) (dd r-d rr)+(dd r-d rr)^2+4 cchi (-2 d dd r-3 dd r^2+2 d^2 rr-2 chi r rr+3 d r rr)),1/2Cos[psi] /Abs[r dd-rr d]\[Sqrt](4 cchi^2 r^2+4 chi^2 rr^2+4 chi (2 dd+3 rr) (dd r-d rr)+(dd r-d rr)^2+4 cchi (-2 d dd r-3 dd r^2+2 d^2 rr-2 chi r rr+3 d r rr))},{}]];
+
 TestBranch[{r_,d_,chi_},s_]:=Module[{Di},
 (* tests if (s,.) is on the branch with ImZ>0 *)
 If[r==0,d>0,
@@ -542,8 +557,8 @@ AppendTo[LiTree,{LiStable1[[j1]],LiStable2[[j2]]}],
 ];
 
 ListStableTreesPerturb[LiCh_,{s0_,t0_}]:=Module[{LiChPert},
-LiChPert=LiCh/.{Ch[m_]:>Ch[m+RandomInteger[100]/10000]};
-ListStableTrees[LiChPert,{s0,t0}]/.Ch[x_]:>Ch[Round[x]]];
+LiChPert=LiCh/.{Ch[m_]:>{1,m,1+1/2m(m+3)-RandomInteger[100000]/10000000}};
+Round[ListStableTrees[LiChPert,{s0,t0}]]];
 
 ListStablePlanarTrees[LiCh_]:=Module[{Li,LiTree,Tree},
 (* for a given list of k_i Ch[m_i], construct consistent PLANAR trees *)
@@ -565,14 +580,14 @@ m[0]=m0;
 mp[0]=m0p;
 Do[(* loop on n,np *)
 If[(n+np>=nmin)&&(n+np<=nmax),
-(*PrintTemporary["Trying with ",np," left-movers and ", n," rightmovers"]; *)
+(*PrintTemporary["Trying with ",np," left-movers and ", n," rightmovers"];*) 
 Lim=Union [Table[{m[i],m0p,m[i-1]},{i,n-1}],Table[{mp[j],mp[j-1],m0},{j,np-1}]];
 Do[(* loop on m *)
-Lik=Table[{k[i],1,2(phimax-m0+m0p+1)-Sum[k[ii],{ii,0,i-1}]},{i,0,n-1}];
+Lik=Table[{k[i],If[i>0,If[m[i]==m[i-1],k[i-1],1],1],2(phimax-m0+m0p+1)-Sum[k[ii],{ii,0,i-1}]},{i,0,n-1}];
   Do[ (* loop on k*)
 ktot=Sum[k[ii],{ii,0,n-1}];
 If[ktot<2phimax,
-Likp=Table[{kp[j],1,2(phimax-m0+m0p+1)-ktot-Sum[kp[jj],{jj,0,j-1}]},{j,0,np-1}];
+Likp=Table[{kp[j],If[j>0,If[mp[j]==mp[j-1],kp[j-1],1],1],2(phimax-m0+m0p+1)-ktot-Sum[kp[jj],{jj,0,j-1}]},{j,0,np-1}];
 Do[(* loop on kp *)
 nc+=1;
 If[Sum[k[i]Ch[m[i]]/.repCh,{i,0,n-1}]-Sum[kp[j]Ch[mp[j]]/.repCh,{j,0,np-1}]==gam,AppendTo[Li,Join[Table[k[i]Ch[m[i]],{i,0,n-1}],Table[-kp[j] Ch[mp[j]],{j,0,np-1}]]]],
@@ -591,12 +606,10 @@ If[phimax<=0,Print["There are no trees at this point"];,
 Li=ScanConstituents[{r,d,chi},{s0-t0,s0+t0},{1,2phimax},phimax];
 ScattSort[DeleteDuplicatesBy[Flatten[Select[Table[ListStableTrees[Li[[i]],{s0,t0}],{i,Length[Li]}],Length[#]>0&],1],ScattGraph]]]]
 
-ScanBinarySplits[{r_,d_,chi_},{s0_,t0_}]:=Module[{r1,Li,phi,smin,smax,d1min,d1max,d2min,d2max,chirange,s,t},
+ScanBinarySplits[{r_,d_,chi_},t_]:=Module[{r1,Li,phi,smin,smax,d1min,d1max,d2min,d2max,chirange,s},
 Li={};
-If[r==0 && d!=0,s=chi/d-3/2; Print["Shifting s to ",s],s=s0];
-If[r!=0,s=s0;t=Sqrt[s^2+2/r(chi-r-3/2d-d s)]; Print["Shifting t to ",t],s=s0;t=t0];
+s=Rays[{r,d,chi},t,0];Print["Ray starting at ",{s,t}];
 phi=d-r s;
-(*Print[{s,t,phi}]; *)
 Do[(* loop on r1 *)
 If[Abs[r1]+Abs[r-r1]<=2phi&&r1<=r-r1,
 Which[r==0,smin=chi/d-3/2;smax=chi/d-3/2,
@@ -624,23 +637,28 @@ AppendTo[Li,{{r1,d1,ch},{r-r1,d-d1,chi-ch}}]],
 ],
 {d1,d1min,d1max},
 {d2,d2min,d2max}];],
-{r1,-2phi,2phi}];Li];
+{r1,-2Floor[phi],2Floor[phi]}];Li];
 
-ScanKroneckerSplits[{r_,d_,chi_}]:=Module[{k,kp,mmax,mmin,A},
+ScanKroneckerSplits[{r_,d_,chi_}]:=Module[{k,kp,mmax,mmin,A,Li},
 (* look for 2-body trees {-k' O(m'), k O(m) } *)
+Li={};
+If[r>0,
 A=(-2chi+3d+2r+d^2/r)/r;
 If[A==0,Print["A vanishes"]];
 mmax=Ceiling[d/r]-1;
 mmin=Floor[d/r-A/(d/r-mmax)];
 (*Print[{mmin,mmax}];*)
-Li={};
 Do[If[A==(d/r-m)(d/r-mp),
 k=(d-mp r)/(m-mp);kp=(d-m r)/(m-mp);
 If[IntegerQ[k]&&IntegerQ[kp]&&k>=1&&kp>=1,
 AppendTo[Li,{{-kp  Ch[mp],k Ch[m]}}];
 ]],
-{m,mmin+1,mmax},{mp,mmin,m-1}];
-Li];
+{m,mmin+1,mmax},{mp,mmin,m-1}],
+If[r<0,Li=-ScanKroneckerSplits[{-r,-d,-chi}],
+(* r=0 *)
+Li=Map[If[IntegerQ[chi/d-3/2+d/#/2],{-# Ch[chi/d-3/2-d/#/2],# Ch[chi/d-3/2+d/#/2]},{}]&,Divisors[d]];
+]];
+Select[Li,Length[#]>0&]];
 
 
 
@@ -667,6 +685,41 @@ If[GCD@@(S1[[1]]+S2[[1]])!=1,Print["Beware, non-primitive state"]];
 
 EvaluateKronecker[f_]:=
 f/.Subscript[Kr, kappa_][g1_,g2_]:>Simplify[P2HiggsBranchFormula[{{0,kappa},{-kappa,0}},{1/g1,-1/g2},{g1,g2}]];
+
+BinaryTreeIndex[TreeList_]:=Table[
+(* compute index for each tree in the list; do not trust the result if internal lines have non-primitive charges *)
+Simplify[Times@@BinaryTreeIndexInternal[TreeList[[i]]][[2]]],{i,Length[TreeList]}];
+
+BinaryTreeIndexInternal[Tree_]:=Module[{S1,S2,kappa,Li},
+If[!ListQ[Tree]||Length[Tree]==3,{Tree,{1}},
+S1=BinaryTreeIndexInternal[Tree[[1]]]/.repCh;
+S2=BinaryTreeIndexInternal[Tree[[2]]]/.repCh;
+kappa=3Abs[(S1[[1,1]]S2[[1,2]]-S1[[1,2]]S2[[1,1]])];
+Li=Join[S1[[2]],S2[[2]]];
+AppendTo[Li,(-1)^(kappa+1)(y^kappa-y^(-kappa))/(y-1/y)];
+{S1[[1]]+S2[[1]],Li}]];
+
+AbelianizedScatteringSequence[ScattSeq_]:=Module[{Constituents,Multip,PrimitiveConstitutents,PartitionTable,k},
+Constituents=TreeConstituents[ScattSeq];
+Multip=Abs[Constituents/.Ch[x_]:>1];
+PrimitiveConstitutents=Constituents/Multip;
+PartitionTable=Table[IntegerPartitions[Multip[[i]]],{i,Length[Multip]}];
+Flatten[Table[Sort[Flatten[Table[PartitionTable[[j,k[j]]]PrimitiveConstitutents[[j]],{j,Length[Multip]}]]],##]&@@Table[{k[i],Length[PartitionTable[[i]]]},{i,Length[Multip]}],Length[Multip]-1]];
+
+IndexFromAbelianizedSequences[LiAbelianized_,{s0_,t0_}]:=Module[{LiAttIndices,LiSymFactors,LiCharges,LiTrees,k},
+LiAttIndices=Abs[LiAbelianized/.Ch[x_]:>1]/.k_Integer:>(y-1/y)/k/(y^k-1/y^k);
+LiSymFactors=Map[Length[Permutations[#]]/Length[#]!&,LiAbelianized];
+Table[
+LiCharges=LiAbelianized[[k]];
+LiTrees=ListStableTreesPerturb[LiCharges,{s0,t0}];
+(*Print[LiTrees/.{r_Integer,d_Integer,chi_Integer}:>r Ch[d/r]]; *)
+LiSymFactors[[k]] (Times@@LiAttIndices[[k]])BinaryTreeIndex[LiTrees](* (BinaryTreeIndex[LiTrees]/.Subscript[Kr, kappa_][g1_,g2_]:>(-1)^(kappa g1 g2+1)(y^(kappa g1 g2)-y^(-kappa g1 g2))/(y-1/y))*),
+{k,Length[LiAbelianized]}]];
+
+IndexFromSequences[LiScattSeq_,{s0_,t0_}]:=Module[{LiAbelianized},LiAbelianized=DeleteDuplicates[Flatten[Map[AbelianizedScatteringSequence,LiScattSeq],1]];
+IndexFromAbelianizedSequences[LiAbelianized,{s0,t0}]
+]
+
 
 (* taken in part from CoulombHiggs.m package *) 
 P2HiggsBranchFormula[Mat_,Cvec_,Nvec_]:=Module[{Cvec0},
@@ -915,7 +968,7 @@ AppendTo[Li,If[(S2[[1]]/.repCh)[[1]]==0||S2[[2,2]]==z[[2]],Line[{S2[[2]],z}],Par
 ScattDiagLV[TreeList_,psi_]:=Module[{T,TNum,Diagram,xmin,xmax},
 (* Draw overlayed diagrams in (s,t) plane for a LIST of trees *)
 LiSlopes={};LiHeights={};
-Diagram={};xmin={};xmax={};
+Diagram={AbsoluteThickness[1]};xmin={};xmax={};
 Do[T=ScattDiagInternalLV[TreeList[[i]],psi,{TreeHue[Length[TreeList],i],AbsoluteThickness[1]}];
 TNum=T/.repCh;
 AppendTo[Diagram,TreeHue[Length[TreeList],i]];
@@ -1047,7 +1100,7 @@ McKayRay[{n1_,n2_,n3_},{u_,v_},{k1_,k2_},tx_]:=(* produces from {u,v}+k1 vec to 
 {Arrow[{{u,v}+k1 McKayVec[{n1,n2,n3}],{u,v}+k2 McKayVec[{n1,n2,n3}]}],Text[tx,{u,v}+(k2+.1) McKayVec[{n1,n2,n3}]]};
 McKayrep={n1_,n2_,n3_}:>n1 Subscript[\[Gamma], 1]+n2  Subscript[\[Gamma], 2 ]+n3 Subscript[\[Gamma], 3 ];
 McKayRayEq[{n1_,n2_,n3_},{u_,v_}]:=n1+n2+n3+Sqrt[3] n1 v-Sqrt[3] n3 v-(-2 n2+n1+n3) u;
-McKayIntersectRays[{n1_,n2_,n3_},{nn1_,nn2_,nn3_}]:=If[(n3 (nn1-nn2)+n1 (nn2-nn3)+n2 (-nn1+nn3))!=0,{(n3 (2 nn1+nn2)+n2 (nn1-nn3)-n1 (nn2+2 nn3))/(2 (n3 (nn1-nn2)+n1 (nn2-nn3)+n2 (-nn1+nn3))),(Sqrt[3] ((n1+n3) nn2-n2 (nn1+nn3)))/(2 (n3 (-nn1+nn2)+n2 (nn1-nn3)+n1 (-nn2+nn3)))}];
+McKayIntersectRays[{n1_,n2_,n3_},{nn1_,nn2_,nn3_}]:=If[(n3 (nn1-nn2)+n1 (nn2-nn3)+n2 (-nn1+nn3))!=0,{(n3 (2 nn1+nn2)+n2 (nn1-nn3)-n1 (nn2+2 nn3))/(2 (n3 (nn1-nn2)+n1 (nn2-nn3)+n2 (-nn1+nn3))),(Sqrt[3] ((n1+n3) nn2-n2 (nn1+nn3)))/(2 (n3 (-nn1+nn2)+n2 (nn1-nn3)+n1 (-nn2+nn3)))},{}];
 McKayIntersectRays[{n1_,n2_,n3_},{nn1_,nn2_,nn3_},z_,zz_]:=
 (* returns (x,y) coordinate of intersection point of two rays, or {} if they don't intersect *)
 Module[{zi},If[(n3 (nn1-nn2)+n1 (nn2-nn3)+n2 (-nn1+nn3)!=0) ,zi={(n3 (2 nn1+nn2)+n2 (nn1-nn3)-n1 (nn2+2 nn3))/(2 (n3 (nn1-nn2)+n1 (nn2-nn3)+n2 (-nn1+nn3))),(Sqrt[3] ((n1+n3) nn2-n2 (nn1+nn3)))/(2 (n3 (-nn1+nn2)+n2 (nn1-nn3)+n1 (-nn2+nn3)))};
@@ -1113,7 +1166,8 @@ z={};
 Which[
 TreeNum[[1]]>=1&&TreeNum[[2]]==0 && TreeNum[[3]]==0 ,z={1,0}-10 McKayVec[{1,0,0}],
 TreeNum[[2]]>=1&&TreeNum[[3]]==0 && TreeNum[[1]]==0 ,z={-1/2,-Sqrt[3]/2}-10 McKayVec[{0,1,0}],
-TreeNum[[3]]>=1&&TreeNum[[1]]==0 && TreeNum[[2]]==0 ,z={-1/2,Sqrt[3]/2}-10 McKayVec[{0,0,1}]];
+TreeNum[[3]]>=1&&TreeNum[[1]]==0 && TreeNum[[2]]==0 ,z={-1/2,Sqrt[3]/2}-10 McKayVec[{0,0,1}],
+True,z=-10 McKayVec[TreeNum]];
 {Tree/.repChn,z},
 (* otherwise, check each of the two branches *)
 S1=McKayScattCheck[Tree[[1]]];
@@ -1172,7 +1226,7 @@ McKayRay[{0,1,0},{-1/6,V/Sqrt[3]},L{0,1},"\!\(\*SubscriptBox[\(\[Gamma]\), \(2\)
 McKayRay[{0,0,1},{1/2V+1/12,1/(2Sqrt[3])(1/2-V)},L{0,1},"\!\(\*SubscriptBox[\(\[Gamma]\), \(3\)]\)"],
 Dashed,Line[2L{{-1,0},{1,0}}],Line[2L{{0,-1},{0,1}}],Dotted,
 Line[{{-1/2V+1/12,-1/(2Sqrt[3])(1/2+V)},{-1/6,V/Sqrt[3]},{1/2V+1/12,1/(2Sqrt[3])(1/2-V)},{-1/2V+1/12,-1/(2Sqrt[3])(1/2+V)}}]}
-],AspectRatio->1,PlotRange->{3{-L,L},3{-L,L}}]];
+],AspectRatio->1,PlotRange->{3{-1,1},3{-1,1}}]];
 
 McKayInitialRays[L_]:=
 Graphics[{McKayRay[{1,0,0},{1,0},L{-1.7,1.7},"\!\(\*SubscriptBox[\(\[Gamma]\), \(1\)]\)"],
@@ -1412,32 +1466,36 @@ With[{dcba=ToFundDomainC[init][[2,2;;,2;;]]},
 Function@@{al,(dcba[[2,1]]+dcba[[2,2]] RayCh[psi+2\[Pi]-\[Pi] homshift][al])/(dcba[[1,1]]+dcba[[1,2]] RayCh[psi+2\[Pi]-\[Pi] homshift][al])}];
 ];
 
-TreeToRaysPlot[arg_List,psi_?NumericQ,plotoptions___]:=Table[ParametricPlot[ReIm[ray[a]],{a,0,1},plotoptions],{ray,TreeToRays[arg,psi]}];
+TreeToRaysPlot[arg_List,psi_?NumericQ,plotoptions___]:=Show[Graphics[],Table[ParametricPlot[ReIm[ray[a]],{a,0,1},plotoptions],{ray,TreeToRays[arg,psi]}]];
 TreeToRaysPlot[obj : _. Ch[_] | _. Ch[_][_], args___] := TreeToRaysPlot[{obj}, args];
-TreeToRays[tree_,psi_]:=TreeToRays[tree,psi]=Flatten[TreeToRaysch2[tree,psi][[2;;]]];
+TreeToRays[tree_,psi_]:=TreeToRays[tree,psi]=Flatten[{#[[3;;]],#[[2]]}]&@TreeToRaysch2[tree,psi];
 
-Module[{amax=5,theta,gamma,gamma1,gamma2,rays1,lastray1,rays2,lastray2,a,a2,arules,aroot,a2root,tauinit,result},
-TreeToRaysch2[arg:((coef_:1) Ch[n_]),psi_?NumericQ]:=TreeToRaysch2[coef Ch[n][0],psi];
-TreeToRaysch2[arg:{(coef_:1) Ch[n_],homshift_Integer},psi_?NumericQ]:=TreeToRaysch2[coef Ch[n][homshift],psi];
-TreeToRaysch2[arg:((coef_:1) Ch[n_][homshift_Integer]),psi_?NumericQ]:=
-{(-1)^homshift coef CPointch2[n],ConifoldRay[n,psi,homshift+If[coef>0,0,1]],{}};
-TreeToRaysch2[{trees_},psi_]:=TreeToRaysch2[trees,psi];(*for convenience, unary nodes are ok*)
-TreeToRaysch2[arg:{trees1_,trees2_},psi_?NumericQ]:=(
-{{gamma1,lastray1,rays1},{gamma2,lastray2,rays2}}={TreeToRaysch2[trees1,psi],TreeToRaysch2[trees2,psi]};
-If[lastray1==={}||lastray2==={},
-arules={},
-arules=Check[FindRoot[ReIm@lastray1[a]==ReIm@lastray2[a2],{a,0.5,0,1},{a2,0.5,0,1}],{},FindRoot::reged]
-];
-If[arules==={},
-{gamma,{},Join[rays1,rays2,{lastray1,lastray2}]},
-{aroot,a2root}={a,a2}/.arules;
-tauinit=lastray1[aroot];
-gamma=gamma1+gamma2;
-{gamma,
-IntegralCurve[tauinit,Normalize[EichlerZch2[gamma,tau]]Conjugate[UnitDtauZch2[gamma,tau]],{0,0,amax},{Im[tau]==0.01,Norm[EichlerZch2[gamma,tau]]==10^-7}],
-Join[rays1,rays2,{Function@@{Simplify[lastray1[aroot Slot[1]]]},
-Function@@{Simplify[lastray2[a2root Slot[1]]]}}]}]
-);
+Module[{amax=5,theta,gamma,gamma1,gamma2,rays1,lastray1,rays2,lastray2,a,a2,ainit,a2init,arules,aroot,a2root,tauinit,result},
+  TreeToRaysch2[arg:((coef_:1) Ch[n_]), psi_?NumericQ] := TreeToRaysch2[coef Ch[n][0],psi];
+  TreeToRaysch2[arg:{(coef_:1) Ch[n_],homshift_Integer}, psi_?NumericQ] := TreeToRaysch2[coef Ch[n][homshift],psi];
+  TreeToRaysch2[arg:((coef_:1) Ch[n_][homshift_Integer]), psi_?NumericQ] :=
+    {(-1)^homshift coef CPointch2[n], ConifoldRay[n,psi,homshift+If[coef>0,0,1]],{}};
+  TreeToRaysch2[{trees_},psi_] := TreeToRaysch2[trees,psi]; (*for convenience, unary nodes are ok*)
+  TreeToRaysch2[arg:{trees1_,trees2_},psi_?NumericQ] := (
+    {{gamma1,lastray1,rays1},{gamma2,lastray2,rays2}} = {TreeToRaysch2[trees1,psi],TreeToRaysch2[trees2,psi]};
+    arules={};
+    If[lastray1=!={}&&lastray2=!={},
+       Do[If[arules === {},  
+	     arules = Check[FindRoot[ReIm@lastray1[a] == ReIm@lastray2[a2], {a, ainit, 0, 1}, {a2, a2init, 0, 1}],
+			    {}, FindRoot::reged]],
+	  {ainit, {0.1, 0.5, 0.9}}, {a2init, {0.1, 0.5, 0.9}}];
+    ];
+    If[arules==={},
+       {gamma,{},Join[rays1,{lastray1},rays2,{lastray2}]}
+     ,
+       {aroot,a2root} = {a,a2}/.arules;
+       tauinit=lastray1[aroot];
+       gamma=gamma1+gamma2;
+       {gamma,
+	IntegralCurve[tauinit,Normalize[EichlerZch2[gamma,tau]]Conjugate[UnitDtauZch2[gamma,tau]],{0,0,amax},{Im[tau]==0.01,Norm[EichlerZch2[gamma,tau]]==10^-7}],
+	Join[rays1,{Function@@{Simplify[lastray1[aroot Slot[1]]]}},
+		 rays2,{Function@@{Simplify[lastray2[a2root Slot[1]]]}}]}
+    ]);
 ];
 
 StabilityWall[tree:{_,_},tauinit_]:=
@@ -1458,7 +1516,7 @@ RayFromInfinity[gamma:{r_,d_,chi_},psi_]:=
                             {s,If[r!=0,
                                   d/r-t Tan[psi]-Sign[r]/Cos[psi] Sqrt[t^2+2Disc[{r,d,chi}]Cos[psi]^2],
                                   (chi-3d/2-r)/d-t Tan[psi]]}];
-    IntegralCurve[tauinit,-I Exp[I psi]Conjugate[UnitDtauZ[gamma,tau]],{0,-10,10},
+    IntegralCurve[tauinit,-I Exp[I psi]Conjugate[UnitDtauZch2[gamma,tau]],{0,-10,10},
       {Im[tau]==0.2,Norm[EichlerZ[gamma,tau]]==10^-7}]];
 
       

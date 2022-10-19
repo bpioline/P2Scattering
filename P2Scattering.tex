@@ -117,7 +117,7 @@
 
 \def\newdefy{\vardef{y}}
 
-\title{P2Scattering.m v1.3}
+\title{P2Scattering.m v1.4}
  
 \author{Bruno Le Floch and Boris Pioline}
 
@@ -217,7 +217,12 @@ for example for $\gamma=[3,0,0)$ through the point $(s,t)=(-\frac32,2)$,
 }{
 \{18,9\}
 }
-reproducing the GV invariant $N_3^0=27$. Similarly, one can find the trees contributing near
+reproducing the GV invariant $N_3^0=27$. It should be stressed that the current implementation of the routine \fun{ScattIndex}
+assumes that the index associated to each tree is a product of Kronecker indices associated to each
+vertex, and may give the wrong result if some of the edges carry non-primitive charges. In the case above, it does produce the correct results for both trees $K_3(3,3)+K_{12}(1,1)$.
+
+
+Similarly, one can find the trees contributing near
 the orbifold point using \fun{McKayScanAllTrees}: for the same charge, corresponding to dimension vector $(0,3,6)$, a single tree contributes in the anti-attractor chamber, with index 18,
 
 \mathematica{1.0}{
@@ -293,7 +298,7 @@ which is massless at $\tau=m$}
 \defvar{MOrbp}{Monodromy matrix  in $[r,d,\chi)$ basis around orbifold point $\tau_o+1$}
 
 
-\defn{Trees}{\vardef{r},\vardef{d},\vardef{chi}}{gives the list of precomputed trees at large volume, when available}
+\defn{LVTrees}{\vardef{r},\vardef{d},\vardef{chi}}{gives the list of precomputed trees at large volume, when available}
 \defn{McKayTrees}{\{\vardef{n1},\vardef{n2},\vardef{n3}\}}{gives the list of precomputed  trees around the orbifold point, when available}
 \defvar{ExcepSlopes}{List of slopes of exceptional bundles between -3 and 4}
 \defvar{ListSubsetsAny}{Precomputed list of all binary splits of Range[n] for n=2..10, used by \fun{ListStableTrees}}
@@ -357,8 +362,7 @@ $\tau$ is a rational number)}
 \defn{CPointch2}{\vardef{tau}}
 {gives the charge vector $[r,d,\ch_2]$ of an object that becomes massless at $\tau$ (assuming
 $\tau$ is a rational number)}
-\defn{EvaluateKronecker}{\vardef{f}}
-{replaces each $Kr_m[p,q]$ with the index of the Kronecker quiver with $m$ arrows and dimension vector $(p,q)$, using routines taken from \fun{CoulombHiggs.m} package}
+
 \defn{McKayrep}{}
 {replaces \{\vardef{n1},\vardef{n2},\vardef{n3}\} by $n_1 \gamma_1+n_2  \gamma_1+n_3\gamma_3$}
 
@@ -463,7 +467,7 @@ evaluates $2\pi i (\tau+1/2)+\bar f_1(\tau)$}
 {returns $\{charge,\{x,y\}\}$ of the root vertex if \var{Tree} is consistent, otherwise 
 $\{total charge,\{\}\}$}
 \defn{ScattSort}{\vardef{Litree}}
-{ sorts trees by growing radius of wall}
+{ sorts trees by decreasing wall radius}
 \defn{ScattGraph}{\vardef{tree}}
 {extracts the list of vertices and adjacency matrix of Tree}
 \defn{xytost}{\{\vardef{x},\vardef{y}\}}
@@ -490,31 +494,31 @@ the empty set otherwise; the arguments $z,z'$ can be omitted.}
 which are stable at $(s_0,t_0)$}
 \defn{ListStableTreesPerturb}{\vardef{LiCh},\{\vardef{s0},\vardef{t0}\}}
 {constructs consistent trees from constituents in \var{LiCh} of the form $k_i Ch[m_i]$, 
-which are stable at $(s_0,t_0)$ after perturbing  the $m_i$'s}
+which are stable at $(s_0,t_0)$ after perturbing $\ch_2$ for each  $Ch[m_i]$}
 \defn{ListStablePlanarTrees}{\vardef{LiCh},\{\vardef{s0},\vardef{t0}\}}
 {constructs consistent planar trees from constituents in LiCh of the form $k_i Ch[m_i]$, 
 which are stable at $(s_0,t_0)$}
 \defn{ScanConstituents}{\{\vardef{r},\vardef{d},\vardef{chi}\},\{\vardef{mmin},\vardef{mmax}\},
 \{\vardef{nmin},\vardef{nmax}\},\vardef{phimax}}
-{ searches possible list of constituents  with slope in $[mmin,mmax]$, number of constituents in $[nmin,nmax]$, electric potential less than phimax and charges adding up to $[r,d,\chi)$}
+{ searches possible list of constituents  with slope in $[mmin,mmax]$, number of constituents in $\var{[nmin,nmax]}$, electric potential less than \var{phimax} and charges adding up to $[r,d,\chi)$}
 
 \defn{ScanAllTrees}{\{\vardef{r},\vardef{d},\vardef{chi}\},\{\vardef{s},\vardef{t}\}}
 { constructs all possible trees with charges adding up to $[r,d,\chi)$ leading to an
 outgoing ray through the point $(s,t)$; uses
 \fun{ScanConstituents} with the most conservative values 
 $mmin=s-t, mmax=s+t$, $nmin=1, nmax=2\varphi_{s}(\gamma)$
-and $phimax=\varphi_{s}(\gamma)$ }
+and $phimax=\varphi_{s}(\gamma)=d-rs$ }
 
-\defn{ScanBinarySplits}{\{\vardef{r},\vardef{d},\vardef{chi}\},\{\vardef{s0},\vardef{t0}\}}
-{produces list of $[r',d',\chi')$ such that $[r,d,\chi)$ can split into $[r',d',\chi')$ along the ray starting at $(s_0,t_0)$}
+\defn{ScanBinarySplits}{\{\vardef{r},\vardef{d},\vardef{chi}\},\vardef{t0}}
+{produces list of $[r',d',\chi')$ such that $[r,d,\chi)$ can split into $[r',d',\chi')$ along the ray 
+$\cR_0(\gamma)$ starting at height $t_0$}
 
 
 \defn{ScanKroneckerSplits}{\{\vardef{r},\vardef{d},\vardef{chi}\}}
 {scans all possible pairs $\{-k' Ch(m'), k Ch(m)\}$ such that each pair scatters into $[r,d,\chi)$}
-\defn{ScattIndex}{\vardef{TreeList}}
-{computes the index for each tree in \var{TreeList}; do not trust the result if internal lines have non-primitive charges !}
-\defn{ScattIndexInternal}{\vardef{TreeList}}
-{computes total charge, list of Kronecker indices associated to each vertex in \var{Tree}}
+
+
+
 
 \defn{ScattDiag}{\vardef{TreeList}}
 { draws scattering diagram in $(x,y)$ plane for each tree in \var{TreeList}} 
@@ -588,10 +592,6 @@ $m$; this position is lowered vertically on each call, using variables \var{LiSl
 {computes the positive vector along the ray}
 \defn{McKayRay}{\{\vardef{n1},\vardef{n2},\vardef{n3}\},\{\vardef{u},\vardef{v}\},\{vardef{k1},\vardef{k2}\},\vardef{tx}}
 {produces an arrow from $(u,v)+k_1 w$ to $(u,v)+k_2 w$, where $w$ is the positive vector along the ray, decorated with text \var{tx} at the target}
-\defn{McKayScattIndex}{\vardef{TreeList}}
-{computes the index for each tree in TreeList; do not trust the result if internal lines have non-primitive charges !}
-\defn{McKayScattIndexInternal}{\vardef{Tree}}
-{computes total charge, list of Kronecker indices associated to each vertex in Tree}
 \defn{McKayListAllConsistentTrees}{\{\vardef{n1},\vardef{n2},\vardef{n3}\}}
 {generates consistent scattering trees with leaves carrying charge $\{p,0,0\}, \{0,p,0\},\{0,0,p\}$ adding up to $(n_1,n_2,n_3)$, with non-zero DSZ pairing at each vertex, with distinct support}
 \defn{McKayListAllTrees}{\{\vardef{n1},\vardef{n2},\vardef{n3}\}}
@@ -681,52 +681,73 @@ with $k,p,q,n$ integers.}
 \defn{TreeToRaysPlot}{\vardef{Tree},\vardef{psi},\vardef{plotoptions}}
 {Plots the rays produced by \fun{TreeToRays[Tree,psi]} with the given plot options.}
 
+\section{Index computations}
+
+\defn{ScattIndex}{\vardef{TreeList}}
+{computes the index for each tree in \var{TreeList}; do not trust the result if internal lines have non-primitive charges !}
+
+\defn{ScattIndexInternal}{\vardef{TreeList}}
+{computes total charge, list of Kronecker indices associated to each vertex in \var{Tree}}
+
+\defn{McKayScattIndex}{\vardef{TreeList}}
+{computes the index for each tree in TreeList; do not trust the result if internal lines have non-primitive charges !}
+\defn{McKayScattIndexInternal}{\vardef{Tree}}
+{computes total charge, list of Kronecker indices associated to each vertex in Tree}
+
+
+\defn{EvaluateKronecker}{\vardef{f}}
+{replaces each $Kr_m[p,q]$ with the index of the Kronecker quiver with $m$ arrows and dimension vector $(p,q)$, using routines taken from \fun{CoulombHiggs.m} package}
+
+
+\defn{BinaryTreeIndex}{\vardef{TreeList}}{computes the index of each binary tree in \var{TreeList}}
+
+\defn{BinaryTreeIndexInternal}{\vardef{Tree}}{produces a list of wall-crossing factors from each vertex in a binary tree}
+
+\defn{AbelianizedScatteringSequence}{\vardef{ScattSeq}}{produces a list of abelianized constituents, by replacing each $k Ch[m]$ by $\{k_i Ch[m]\}$ where $k_i$ runs over integer partitions of $k$}
+
+\defn{IndexFromAbelianizedSequences}{\vardef{LiAbelianized},\{\vardef{s0},\vardef{t0} \}}{constructs all possible perturbed binary trees from constituents in \var{LiAbelianized} which are stable for 
+the large volume central charge at $(s_0,t_0)$, and compute the contribution to the index from each of them}
+
+\defn{IndexFromSequences}{\vardef{LiScattSeq},,\{\vardef{s0},\vardef{t0} \}}{c constructs all possible lists of abelianized constituents from the list of scattering sequences \var{LiScattSeq}, removes duplicates, and applies \fun{IndexFromAbelianizedSequences} on each of them}
+
+
+
+
+
 \section{Higgs branch formula}
-In addition, the package includes some routines from the Mathematica 
+In addition, the package includes routines adapted from the Mathematica 
 package {\tt CoulombHiggs.m} \cite{CoulombHiggs}, mainly for the 
 purpose of evaluating the indices $K_m(p,q)$ of the Kronecker quiver.
-The names of the routines are prefaced by {\tt P2} to avoid clash.
+The names of the routines are prefaced by {\tt P2} to avoid conflicts.
 
 
 
 \defn{P2HiggsBranchFormula}{\vardef{Mat},\vardef{Cvec},\vardef{Nvec} }
-	                                   {standalone routine which computes the Poincar\'e-Laurent
-                   polynomial  of a quiver with DSZ products $\alpha_{ij}=\var{Mat}[[i,j]]$, 
+	                                   {computes the refined index  of a quiver with DSZ products $\alpha_{ij}=\var{Mat}[[i,j]]$, 
                    dimension vector $N_i=\var{Nvec}[[i]]$, 
                    FI parameters $\zeta_i=\var{Cvec}[[i]]$, using Reineke's formula. 
                    It is assumed, but not checked, that the quiver has no oriented 
                    loop;}
 
 
-\defn{P2StackInvariant}{\vardef{Mat},\vardef{Cvec},\vardef{Nvec},\vardef{y} }{gives 
-                 the stack 
-                  invariant $G_{\rm Higgs}(\gamma,\zeta,y)$
-                  of a quiver with DSZ matrix $\alpha_{ij}=\var{Mat}[[i,j]]$, possibly rescaled 
-                  by an overall factor of 
-                   \var{{\tt \$QuiverMultiplier}}, 
-                  FI parameters $\zeta_i=\var{Cvec}[[i]]$,  dimension vector $N_i=\var{Nvec}[[i]]$, 		using Reineke's formula; the answer is written in terms of unevaluated
-		$q$-deformed factorials \var{P2QFact[n,y]};}
+\defn{P2RationalInvariant}{\vardef{Mat},\vardef{Cvec},\vardef{Nvec},\vardef{y} }{computes the refined rational index
+                  of a quiver with DSZ matrix $\alpha_{ij}=\var{Mat}[[i,j]]$,                  
+                  FI parameters $\zeta_i=\var{Cvec}[[i]]$,  dimension vector $N_i=\var{Nvec}[[i]]$, 		using Reineke's formula}
+
+
+\defn{P2StackInvariant}{\vardef{Mat},\vardef{Cvec},\vardef{Nvec},\vardef{y} }{computes the 
+stacky invariant
+                  of a quiver with DSZ matrix $\alpha_{ij}=\var{Mat}[[i,j]]$,                  
+                  FI parameters $\zeta_i=\var{Cvec}[[i]]$,  dimension vector $N_i=\var{Nvec}[[i]]$, 		using Reineke's formula}
 
 \defn{P2BinarySplits}{\vardef{Nvec}}{gives the list of dimension vectors $\gamma_L$ less than $\gamma$, quotiented by the equivalence relation $\gamma_L \to \gamma-\gamma_L$.}
 
-\defn{P2OmToOmb}{\vardef{f}}{expresses any $\Omega(\gamma,y)$ in $f$
- in terms of $\bar\Omega(\gamma,y)$'s;}
- 
- \defn{P2OmbToHiggsG}{\vardef{Cvec},\vardef{f} }{expresses  any 
- $\bar\Omega(\gamma,y)$ in $\var{f}$
-in terms of the (unevaluated) stack invariants $\gR(\gamma,y)$ .}
-
- \defn{P2EvalHiggsG}{\vardef{Cvec},\vardef{f} }{evaluates any 
-$\gR(\gamma,y)$  in $\var{f}$
-using \fun{P2StackInvariant}}
 
 \defn{P2ListAllPartitions}{\vardef{gam}}{returns the list of unordered 
                    partitions  of the positive integer vector $\gamma$ as a sum of positive, non-zero integer vectors $\alpha_i$; 
                    }
 
-\defn{P2QDeformedFactorial}{\vardef{n},\newdefy }{gives the $q$-deformed factorial $[n,y]!$}
-
-\defn{P2EvalQFact}{\vardef{f}}{evaluates any \var{P2QFact[n,y]} appearing in \var{f}}
+\defn{P2QDeformedFactorial}{\vardef{n},\newdefy }{computes the $q$-deformed factorial $[n,y]!$}
 
 
 
