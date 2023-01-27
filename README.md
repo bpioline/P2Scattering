@@ -3,9 +3,9 @@
 A Mathematica package for studying scattering diagrams and DT invariants on local P^2
 By Bruno Le Floch and Boris Pioline
 
-Based on article "BPS Dendroscopy on local P^2"
+Based on article "BPS Dendroscopy on Local P^2"
 by Pierrick Bousseau, Pierre Descombes, Bruno Le Floch, Boris Pioline, 
-October 2022, to appear on arXiv
+October 2022, [arXiv:2210.10712] 
 
 Mathematica Package: P2Scattering.m
 Basic documentation: P2Scattering.pdf
