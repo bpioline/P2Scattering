@@ -1,6 +1,6 @@
 # P2Scattering.m
 
-A Mathematica package for studying scattering diagrams and DT invariants on local P^2
+A Mathematica package for studying scattering diagrams and Donaldson-Thomas invariants on Local P^2
 By Bruno Le Floch and Boris Pioline
 
 Based on article "BPS Dendroscopy on Local P^2"
