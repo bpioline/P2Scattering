@@ -1,5 +1,5 @@
 
-\documentclass[12pt]{JHEP3}
+\documentclass[12pt]{../JHEP3}
 \usepackage{epsfig,amsfonts,amssymb,amsmath} 
  
 %\setlength{\topmargin}{.5cm}
@@ -117,14 +117,14 @@
 
 \def\newdefy{\vardef{y}}
 
-\title{P2Scattering.m v1.4}
+\title{P2Scattering.m v1.5}
  
 \author{Bruno Le Floch and Boris Pioline}
 
 \abstract{The  {\sc Mathematica} package {\tt P2Scattering.m}, first released alongside our work
-with Pierrick Bousseau and Pierre Descombes \cite{}, provides a suite of routines to study
+with Pierrick Bousseau and Pierre Descombes \cite{Bousseau:2022snm}, provides a suite of routines to study
 the scattering diagram for the derived category $\cC=D^b(K_{\IP^2})$ of coherent sheaves on 
-local $\IP^2$ along the large volume, orbifold and  $\Pi$-stability slices in the space of Bridgeland stability conditions, and extracting the corresponding generalized Donaldson-Thomas invariants $\Omega_Z(\gamma)$. We provide a list of all routines and give a few examples. 
+local $\IP^2$ along the large volume, orbifold and  $\Pi$-stability slices in the space of Bridgeland stability conditions, and extracting the corresponding generalized Donaldson-Thomas invariants $\Omega_Z(\gamma)$. We provide a list of all routines and give a few examples. The current version includes some improvements developed in the course of \cite{LeFloch:2024cwl}.
  }
 
 \begin{document}
@@ -193,7 +193,7 @@ can be obtained from  {\tt https://github.com/bpioline/P2Scattering}
 Assuming that the file {\tt P2Scattering.m} is present in the user's {\sc Mathematica} Application 
 directory, the package is loaded by entering 
 
-\mathematica{1.0}{ <<P2Scattering`}{P2Scattering 1.2 -- A package for evaluating DT invariants on $K_{P^2}$}
+\mathematica{1.0}{ <<P2Scattering`}{P2Scattering 1.5 -- A package for evaluating DT invariants on $K_{P^2}$}
 
 If the file  {\tt P2Scattering.m} has not yet been copied in the user's {\sc Mathematica} Application 
 directory but is in the same directory as the notebook, evaluate instead
@@ -219,8 +219,12 @@ for example for $\gamma=[3,0,0)$ through the point $(s,t)=(-\frac32,2)$,
 }
 reproducing the GV invariant $N_3^0=27$. It should be stressed that the current implementation of the routine \fun{ScattIndex}
 assumes that the index associated to each tree is a product of Kronecker indices associated to each
-vertex, and may give the wrong result if some of the edges carry non-primitive charges. In the case above, it does produce the correct results for both trees $K_3(3,3)+K_{12}(1,1)$.
+vertex, and may give the wrong result if some of the edges carry non-primitive charges. In the case above, it does produce the correct results for both trees $K_3(3,3)+K_{12}(1,1)$. 
+{\bf As of version 1.5,  the correct way to compute the index in presence of non-primitive intermediate states is to use the routine \fun{ScattIndexImproved}, developed by Rishi Raj.
+In order to determine the trees contributing to a given charge vector at a given point $(s,t)$, it is also more efficient to use the new routines \fun{ConstructLVDiagram} and \fun{LVTreesFromListRays}.
+}
 
+\medskip
 
 Similarly, one can find the trees contributing near
 the orbifold point using \fun{McKayScanAllTrees}: for the same charge, corresponding to dimension vector $(0,3,6)$, a single tree contributes in the anti-attractor chamber, with index 18,
@@ -243,6 +247,9 @@ Show[McKayInitialRays[2], McKayScattDiag[LiTrees]]
 }{
 \includegraphics[width=6cm]{figs/McKayScattering036.pdf}
 }
+{\bf As of version 1.5, the correct way to compute the index in presence of non-primitive intermediate states is to use \fun{McKayScattIndexImproved}. In order to determine the trees contributing to a given dimension vector in the anti-attractor chamber, it is also more efficient to use the new routines \fun{ConstructMcKayDiagram} and \fun{McKayTreesFromListRays}.}
+
+\medskip
 
 More  examples can be found on the GitHub repository.
 
@@ -256,7 +263,7 @@ Eichler integral, by mapping back to fundamental domain $F_C$}
    
 \subsection{History}   
    
-The first version of this package was released together with the preprint \cite{P2Global}. 
+The first version of this package was released together with the preprint \cite{Bousseau:2022snm}. 
 
 
 \section{Symbols and global variables}
@@ -584,6 +591,28 @@ $ \{\min(x), \max(x)\}$, using PlotStyle$\to$Style for plotting rays ; used by \
 $m$; this position is lowered vertically on each call, using variables \var{LiSlopes} and 
 \var{LiHeights} to keep track of earlier calls}
 
+
+\defn{ConstructLVDiagram}{\vardef{smin},\vardef{dmax},\vardef{phimax},\vardef{Nmax},\vardef{ListRays}}{Constructs the 
+large volume scattering diagram truncated up to $\varphi\leq \phi_{max}$, 
+starting from initial rays $\pm \cO(k)$
+in the range $s_{min}\leq k \leq s_{max}$, with scattering products $N_1\gamma_1+N_2\gamma_2$, $2\leq N_1+N_2\leq N_{max}$ at each vertex.  The output 
+consists of a list of  $\{ (r,d, \chi), \{x,y\}, p_1, p_2,n_1,n_2 \}$ where
+$(u,v)$ is the initial point for the ray emitted from $n_1$ copies of $p_1$-th ray and $n_2$ copies of 
+ $p_2$-th ray (with $p_1=p_2=0$ for initial rays);
+ If \var{ListRays} is not empty, then use it as initial rays.}
+ 
+\defn{LVTreesFromListRays}{\vardef{ListRays},\{\vardef{r},\vardef{d},\vardef{chi}\}}{ extracts the list 
+of distinct trees with given Chern character}
+
+
+\defn{ScattIndexImproved}{\vardef{TreeList}}{ computes the index for 
+each tree in \var{TreeList}, taking care of non-primitive internal states}
+
+\defn{KroneckerTabs}{\vardef{m},\vardef{Nmax}}{gives the list of populated dimension vectors $\{N_1,N_2\}$ for Kronecker  quiver with  $m$ arrows, with $0<N_1+N_2<
+N_{max}$, restricting to $(N_1,N_2)$ coprime.}
+
+\defn{CostPhi}{\{\vardef{r},\vardef{d},\vardef{chi}\},\vardef{s}}{$=d-r s$}
+
 \section{Orbifold scattering diagram}
 
 \defn{McKayRayEq}{\{\vardef{n1},\vardef{n2},\vardef{n3}\},\{\vardef{u},\vardef{v}\}}
@@ -611,9 +640,28 @@ $(n_1,n_2,n_3)$and with non-zero DSZ pairing at each vertex}
 \defn{McKayIntersectRays}{\{\vardef{n1},\vardef{n2},\vardef{n3}\},\{\vardef{nn1},\vardef{nn2},\vardef{nn3}\},\vardef{z},\vardef{zz}}
 {returns intersection point $(u,v)$ of two rays if the intersection point lies upward from $z$ and $z'$, or 
 empty set otherwise}
+
 \defn{McKayInitialRays}{\vardef{psi},\vardef{L}}
 {draws the initial rays in $(u',v')$ plane, rescaling each arrow by a factor of $L$. If the argument $\psi$
 is omitted, it is assumed to be $\frac{\pi}{2}$.}
+
+\defn{ConstructMcKayDiagram}{\vardef{phimax},\vardef{ListRays}}{Constructs the 
+orbifold quiver  scattering diagram with height up to \var{phimax}. The output 
+consists of a list of  $\{ (n_1,n_2,n_3), \{u,v\}, p_1, p_2,n_1,n_2 \}$ where
+$(u,v)$ is the initial point for the ray emitted from $n_1$ copies of ray $p_1$ and $n_2$ copies of ray $p_2$;
+ If \var{ListRays} is not empty, then use it as initial rays."}
+ 
+\defn{McKayTreesFromListRays}{\vardef{ListRays},\vardef{Nvec}}{ extracts the list 
+of distinct trees with given dimension vector}
+
+
+\defn{McKayScattIndexImproved}{\vardef{TreeList}}{ computes the index for 
+each tree in \var{TreeList}, taking care of non-primitive internal states}
+
+\defvar{InitialRaysOrigin}{is a List of initial points $(u_i,v_i)$ 
+for the 3 initial rays in the orbifold scattering diagram}
+
+
 
 \section{Exact scattering diagram}
 \defn{CriticalPsi}{\vardef{mu}}
@@ -708,7 +756,7 @@ with $k,p,q,n$ integers.}
 \defn{IndexFromAbelianizedSequences}{\vardef{LiAbelianized},\{\vardef{s0},\vardef{t0} \}}{constructs all possible perturbed binary trees from constituents in \var{LiAbelianized} which are stable for 
 the large volume central charge at $(s_0,t_0)$, and compute the contribution to the index from each of them}
 
-\defn{IndexFromSequences}{\vardef{LiScattSeq},,\{\vardef{s0},\vardef{t0} \}}{c constructs all possible lists of abelianized constituents from the list of scattering sequences \var{LiScattSeq}, removes duplicates, and applies \fun{IndexFromAbelianizedSequences} on each of them}
+\defn{IndexFromSequences}{\vardef{LiScattSeq},,\{\vardef{s0},\vardef{t0} \}}{constructs all possible lists of abelianized constituents from the list of scattering sequences \var{LiScattSeq}, removes duplicates, and applies \fun{IndexFromAbelianizedSequences} on each of them}
 
 
 
@@ -751,8 +799,8 @@ stacky invariant
 
 
 
-\bibliography{combined}
-\bibliographystyle{utphys}
+\bibliography{../combined}
+\bibliographystyle{../utphys}
 
 
 \end{document}
