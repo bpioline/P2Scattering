@@ -2,9 +2,9 @@
 
 (*********************************************************************
  *
- *  P2Scattering.m 1.4         
+ *  P2Scattering.m 1.5         
  *                                                          
- *  Developed by Bruno Le Floch and Boris Pioline, October 2022
+ *  Developed by Bruno Le Floch and Boris Pioline, October 2022-Jan 2025
  *
  *  Distributed under the terms of the GNU General Public License 
  *
@@ -66,9 +66,13 @@
  * - Added BinaryTreeIndex,BinaryTreeIndexInternal,AbelianizedScatteringSequence,
  * - Added IndexFromAbelianizedSequences, IndexFromSequences
  * - Fixed ScanKroneckerSplits, ScanConstituents
+ * 1-5
+ * - Added ConstructMcKayDiagram, McKayTreesFromListRays, McKayScattIndexImproved, InitialRaysOrigin
+ * - Added ConstructLVDiagram, LVTreesFromListRays, ScattIndexImproved, ScattIndexImprovedInternal, CostPhi
+ * - Added KroneckerDims, FOmbToOm
  *********************************************************************)
  
-Print["P2Scattering 1.4 - A package for evaluating DT invariants on \!\(\*SubscriptBox[K,SuperscriptBox[\[DoubleStruckCapitalP],2]]\)"];
+Print["P2Scattering 1.5 - A package for evaluating DT invariants on \!\(\*SubscriptBox[K,SuperscriptBox[\[DoubleStruckCapitalP],2]]\)"];
 
 
 BeginPackage["IndexVars`"];
@@ -306,6 +310,22 @@ P2StackInvariant::usage = "P2StackInvariant[Mat_,Cvec_,Nvec_,y_] gives the stack
 P2QDeformedFactorial::usage = "P2QDeformedFactorial[n_,y_] gives the q-deformed factorial ";
 P2ListAllPartitions::usage = "P2ListAllPartitions[gam_] returns the list of unordered partitions of the positive integer vector gam as a sum of positive integer vectors "; 
 P2BinarySplits::usage="P2BinarySplits[Nvec_] gives the list of dimension vectors which are smaller than Nvec/2";
+
+
+(* new routines in v1.5 *)
+ConstructMcKayDiagram::usage="ConstructMcKayDiagram[Nmax_,ListRays_] constructs the quiver scattering diagram with height up to Nmax; The output consists of a list of  {charge, {u,v}, parent1, parent2,n1,n2}  with parent1=parent2=0 for initial rays; If ListRays is not empty, then uses it as initial rays.";
+McKayTreesFromListRays::usage="McKayTreesFromListRays[ListRays_,{n1_,n2_,n3_}] extracts the list of distinct trees with given dimension vector";
+McKayScattIndexImproved::usage="McKayScattIndexImproved[TreeList_, opt_] computes the index for each tree in TreeList, taking care of non-primitive internal states";
+McKayScattIndexImprovedInternal::usage="McKayScattIndexImprovedInternal[Tree_, opt_] computes the index for Tree, taking care of non-primitive internal states";
+InitialRaysOrigin::usage ="InitialRaysOrigin is a List of initial points (u_i,v_i) for initial rays in McKay scattering diagram";
+
+ConstructLVDiagram::usage="ConstructLVDiagram[smin_,smax_,phimax_,Nm_,ListRays_] constructs the LV scattering diagram with initial rays O(k),O(k)[1] in the interval smin<=k<=smax, cost function up to phimax, scattering products with n1+n2<=Nm at each intersection; the output consists of a list of {charge, {x,y}, parent1,parent2,n1,n2}, with parent1=parent2=0 for initial rays; If ListRays is not empty, then uses it as initial rays."; LVTreesFromListRays::usage="lVTreesFromListRays[ListRays_,{r_,d_,chi_}] extract the trees with given charge in the List of rays,  by ConstructLVDiagram";
+ScattIndexImproved::usage="ScattIndexImproved[TreeList_, opt_] computes the index for each tree in TreeList, taking care of non-primitive internal states";
+ScattIndexImprovedInternal::usage="ScattIndexImprovedInternal[Tree_, opt_] computes the index for Tree, taking care of non-primitive internal states";
+CostPhi::usage="CostPhi[{r_,d_,chi_},s_]:=d-r s";
+
+KroneckerDims::usage="KroneckerDims[m_,Nn_] gives the list of populated dimension vectors {n1,n2} for Kronecker quiver with m arrows, with (n1,n2) coprime and 0<=n1+n2<=Nn"; 
+FOmbToOm::usage="FOmbToOm[OmbList_] computes integer index from list of rational indices, used internally by FScattIndex";
 
 
 (* ::Section:: *)
@@ -1520,6 +1540,194 @@ RayFromInfinity[gamma:{r_,d_,chi_},psi_]:=
       {Im[tau]==0.2,Norm[EichlerZ[gamma,tau]]==10^-7}]];
 
       
+
+
+(* ::Section:: *)
+(*New routines in v1.5*)
+
+
+ConstructLVDiagram[smin_,smax_,phimax_,Nm_,ListRays0_]:=Module[
+{Inter,ListInter,ListRays,ListNewRays,kappa,KTab},
+(* initial rays {charge, {x,y}, parent1, parent2,n1,n2 } *)
+If[ListRays0=={},
+         ListRays=Flatten[{
+Table[{Ch[k],{k,-k^2/2},0,0,0,0},{k,Ceiling[smin],Floor[smax]}],
+Table[{Ch[k][1],{k,-k^2/2},0,0,0,0},{k,Ceiling[smin],Floor[smax]}]},1]/.repCh;
+   ListInter={};,
+(* If list of rays is already provided *)
+ListRays=ListRays0;
+ListInter=Select[Table[{ListRays[[i,3]],ListRays[[i,4]]},{i,Length[ListRays]}],First[#]>0&]];
+While[True,
+ListNewRays={};
+       Monitor[ Do[
+If[  !MemberQ[ListInter,{i,j}],
+AppendTo[ListInter,{i,j}];
+ kappa=DSZ[ListRays[[i,1]],ListRays[[j,1]]];
+If[kappa!=0,Inter=IntersectRaysNoTest[ListRays[[i,1]],ListRays[[j,1]],ListRays[[i,2]],ListRays[[j,2]]];
+If[Inter!={},
+KTab=KroneckerDims[Abs[kappa],Nm];
+Do[If[CostPhi[KTab[[k,1]] ListRays[[i,1]]+KTab[[k,2]]ListRays[[j,1]],Inter[[1]]]<=phimax,
+AppendTo[ListNewRays,{KTab[[k,1]]ListRays[[i,1]]+KTab[[k,2]]ListRays[[j,1]],Inter,i,j,KTab[[k,1]],KTab[[k,2]]}]],{k,Length[KTab]}]
+]]]
+,{i,Length[ListRays]},{j,i+1,Length[ListRays]}],{i,j}];
+If[ListNewRays=={},Break[],
+Print["Adding ",Length[ListNewRays], " rays, "];
+ListRays=Flatten[{ListRays,ListNewRays},1];
+]];
+Print[Length[ListRays], " in total."];
+ListRays];
+
+(* Extract tree leading to k-th ray, internal *)
+TreeFromListRays[ListRays_,k_]:=If[ListRays[[k,3]]==0,ListRays[[k,1]],{ListRays[[k,5]]TreeFromListRays[ListRays,ListRays[[k,3]]],ListRays[[k,6]]TreeFromListRays[ListRays,ListRays[[k,4]]]}];
+
+(* Extract all trees leading to a ray with charge {r,d,chi} *)
+LVTreesFromListRays[ListRays_,{r_,d_,chi_}]:=Module[{Lipos,Div,LiTrees},
+Div=Divisors[GCD@@{r,d,chi}];
+Lipos=Flatten[Join[Table[Position[ListRays,{r,d,chi}/k],{k,Div}]],1];
+If[Lipos=={},
+Print["No such dimension vector in the list"],
+LiTrees=(GCD[r,d,chi]/GCD@@ListRays[[#,1]])TreeFromListRays[ListRays,#]&/@First[Transpose[Lipos]];
+ScattSort[DeleteDuplicatesBy[SortBy[LiTrees,Length[TreeConstituents[#]]&],ScattGraph]
+]]];
+
+CostPhi[{r_,d_,chi_},s_]:=d-r s;
+
+IntersectRaysNoTest[{r_,d_,chi_},{rr_,dd_,cchi_},z_,zz_]:=
+(* returns (x,y) coordinate of intersection point of two rays, or {} if they don't intersect *)
+(* here do not test if DSZ<>0, and require strictly in future of z and zz *)
+Module[{zi},zi={(2 cchi r-3 dd r-2 chi rr+3 d rr)/(2 dd r-2 d rr),(cchi d-chi dd+dd r-d rr)/(-dd r+d rr)};
+If[(zi-z) . {-r,d}>0&&(zi-zz) . {-rr,dd}>0,zi,{}]];
+
+ClearAll[KroneckerDims];
+KroneckerDims[m_,Nn_]:=KroneckerDims[m,Nn]=Module[{Ta={}},
+Do[If[m n1 n2-n1^2-n2^2+1>=0&&GCD[n1,n2]==1,AppendTo[Ta,{n1,n2}]],{n1,0,Nn},{n2,0,Nn-n1}];Drop[Ta,2]];
+
+InitialRaysOrigin={{1,0},{-1/2,-Sqrt[3]/2},{-1/2,Sqrt[3]/2}};
+
+(* construct scattering diagram up to height phimax *)
+ConstructMcKayDiagram[phimax_,ListRays0_]:=Module[{ListRays,ListInter,kappa,Inter,KTab,ListNewRays},
+If[ListRays0=={},
+(* initial rays {charge, {x,y}, parent1, parent2,n1,n2,level } *)
+ListRays=Table[{IdentityMatrix[3][[k]],InitialRaysOrigin[[k]]-5 McKayVec[IdentityMatrix[3][[k]]],0,0,0,0,1},{k,3}];
+ListInter={};,
+(* If list of rays is already provided *)
+ListRays=ListRays0;
+ListInter=Select[Table[{ListRays[[i,3]],ListRays[[i,4]]},{i,Length[ListRays]}],First[#]>0&]];
+While[True,
+ListNewRays={};
+       Monitor[ Do[
+If[  !MemberQ[ListInter,{i,j}],
+AppendTo[ListInter,{i,j}];
+ kappa=McKayDSZ[ListRays[[i,1]],ListRays[[j,1]]];
+If[kappa!=0,Inter=McKayIntersectRaysNoTest[ListRays[[i,1]],ListRays[[j,1]],ListRays[[i,2]],ListRays[[j,2]]];
+If[Inter!={},
+KTab=KroneckerDims[Abs[kappa],Floor[phimax/Min[Plus@@ListRays[[i,1]],Plus@@ListRays[[j,1]]]]];
+Do[If[Plus@@(KTab[[k,1]] ListRays[[i,1]]+KTab[[k,2]]ListRays[[j,1]])<=phimax,
+AppendTo[ListNewRays,{KTab[[k,1]]ListRays[[i,1]]+KTab[[k,2]]ListRays[[j,1]],Inter,i,j,KTab[[k,1]],KTab[[k,2]],ListRays[[i,7]]+ListRays[[j,7]]}]],{k,Length[KTab]}]
+]]]
+,{i,Length[ListRays]},{j,i+1,Length[ListRays]}],{i,j}];
+If[ListNewRays=={},Break[],
+Print["Adding ",Length[ListNewRays], " rays, "];
+ListRays=Flatten[{ListRays,ListNewRays},1];
+]];
+Print[Length[ListRays], " in total."];
+ListRays];
+
+McKayIntersectRaysNoTest[Nvec_,NNvec_,z_,zz_]:=
+(* require strict inequality *)
+Module[{zi},zi=McKayIntersectRays[Nvec,NNvec];If[(zi-z) . McKayVec[Nvec]>0&&(zi-zz) . McKayVec[NNvec]>0,zi,{}]];
+
+(* Extract all trees leading up to a ray with dimension vector {n1,n2,n3} *)
+McKayTreesFromListRays[ListRays_,{n1_,n2_,n3_}]:=Module[{Lipos,Div,LiTrees},
+Div=Divisors[GCD@@{n1,n2,n3}];
+Lipos=Flatten[Join[Table[Position[ListRays,{n1,n2,n3}/k],{k,Div}]],1];
+If[Lipos=={},
+Print["No such dimension vector in the list"],
+LiTrees=((n1+n2+n3)/Plus@@ListRays[[#,1]])TreeFromListRays[ListRays,#]&/@First[Transpose[Lipos]];
+ScattSort[DeleteDuplicatesBy[SortBy[LiTrees,Length[TreeConstituents[#]]&],McKayScattGraph]
+]]];
+
+(* more careful implementation taking care of internal non-primitive states *)
+Options[McKayScattIndexImprovedInternal] = {"Debug"->False};
+
+McKayScattIndexImproved[TreeList_, opt: OptionsPattern[]]:=Table[
+	(* compute index for each tree in the list *)
+	Simplify[FOmbToOm[Last@McKayScattIndexImprovedInternal[TreeList[[i]], opt][[2]]]],{i,Length[TreeList]}];
+
+McKayScattIndexImprovedInternal[Tree_, opt: OptionsPattern[]]:=Module[{S1,S2,g1,g2,gFinal, kappa,Li, tem, repOmAttb, rrr},
+(* compute {total charge, list of Kronecker indices associated to each vertex *)
+	If[!ListQ[Tree]||Length[Tree]>2,{Tree,{Join[{1}, Table[(y-y^-1)/(j(y^j-y^-j)), {j, 2, GCD@@Tree}]]}},
+	If[OptionValue["Debug"], Print["Calling with args: ", Tree[[1]], "  |  ", Tree[[2]]]];
+S1=McKayScattIndexImprovedInternal[Tree[[1]], opt]/.repChn;
+	S2=McKayScattIndexImprovedInternal[Tree[[2]], opt]/.repChn;
+If[OptionValue["Debug"], Print["S1 is: ", S1, "   S2 is: ", S2]];
+	g1=GCD@@S1[[1]];g2=GCD@@S2[[1]];
+gFinal = GCD@@(S1[[1]]+S2[[1]]);
+	kappa=Abs[McKayDSZ[S1[[1]],S2[[1]]]]/g1/g2;
+	Li=Join[S1[[2]],S2[[2]]];
+If[OptionValue["Debug"], Print["Li is: ", Li, "  g1 is: ", g1, "  g2 is: ", g2, "  gFinal is: ", gFinal]];
+AppendTo[Li,
+repOmAttb = Join[
+Table[CoulombHiggs`OmAttb[{P, 0}, y_]->Last[S1[[2]]][[P]], {P, 1, g1}],
+Table[CoulombHiggs`OmAttb[{0, Q}, y_]->Last[S2[[2]]][[Q]], {Q, 1, g2}]
+];
+If[OptionValue["Debug"], Print["repOmAttb is: ", repOmAttb]];
+tem = Table[
+rrr = If[And@@(IntegerQ/@{P g1/gFinal, P g2/gFinal}), CoulombHiggs`FlowTreeFormulaRat[{{0, kappa}, {-kappa, 0}}, {g2, -g1}, {P g1/gFinal, P g2/gFinal}, y], 0];
+Simplify[
+rrr
+/.repOmAttb
+/.{CoulombHiggs`OmAttb[{p_, q_}, y___]:>0/;p>1||q>1||p q !=0}
+],
+{P, 1, gFinal}
+];
+If[OptionValue["Debug"], Print["tem is: ", tem]];tem
+];
+	{S1[[1]]+S2[[1]],Li}]];
+
+(* more careful implementation taking care of internal non-primitive states *)
+Options[ScattIndexImprovedInternal] = {"Debug"->False};
+ScattIndexImproved[TreeList_, opt: OptionsPattern[]]:=Table[
+	(* compute index for each tree in the list *)
+	Simplify[FOmbToOm[Last@ScattIndexImprovedInternal[TreeList[[i]], opt][[2]]]],{i,Length[TreeList]}];
+
+ScattIndexImprovedInternal[Tree_, opt: OptionsPattern[]]:=Module[{S1,S2,g1,g2,gFinal, kappa,Li, tem, repOmAttb, rrr},
+(* compute {total charge, list of Kronecker indices associated to each vertex *)
+	If[!ListQ[Tree]||Length[Tree]>2,{Tree,{Join[{1}, Table[(y-y^-1)/(j(y^j-y^-j)), {j, 2, GCD@@(Tree/.repCh)}]]}},
+	If[OptionValue["Debug"], Print["Calling with args: ", Tree[[1]], "  |  ", Tree[[2]]]];
+    S1=ScattIndexImprovedInternal[Tree[[1]], opt]/.repCh;
+	S2=ScattIndexImprovedInternal[Tree[[2]], opt]/.repCh;
+If[OptionValue["Debug"], Print["S1 is: ", S1, "   S2 is: ", S2]];
+	g1=GCD@@S1[[1]];g2=GCD@@S2[[1]];
+    gFinal = GCD@@(S1[[1]]+S2[[1]]);
+	kappa=3Abs[(S1[[1,1]]S2[[1,2]] -S1[[1,2]]S2[[1,1]])/g1/g2];
+	Li=Join[S1[[2]],S2[[2]]];
+If[OptionValue["Debug"], Print["Li is: ", Li, "  g1 is: ", g1, "  g2 is: ", g2, "  gFinal is: ", gFinal," kappa is",kappa]];
+AppendTo[Li,
+repOmAttb = Join[
+Table[CoulombHiggs`OmAttb[{P, 0}, y_]->Last[S1[[2]]][[P]], {P, 1, g1}],
+Table[CoulombHiggs`OmAttb[{0, Q}, y_]->Last[S2[[2]]][[Q]], {Q, 1, g2}]
+];
+If[OptionValue["Debug"], Print["repOmAttb is: ", repOmAttb]];
+tem = Table[
+rrr = If[And@@(IntegerQ/@{P g1/gFinal, P g2/gFinal}),CoulombHiggs`FlowTreeFormulaRat[{{0, kappa}, {-kappa, 0}}, {g2, -g1}, {P g1/gFinal, P g2/gFinal}, y], 0];
+Simplify[
+rrr
+/.repOmAttb
+/.{CoulombHiggs`OmAttb[{p_, q_}, y___]:>0/;p>1||q>1||p q !=0}
+],
+{P, 1, gFinal}
+];
+If[OptionValue["Debug"], Print["tem is: ", tem]];tem
+];
+	{S1[[1]]+S2[[1]],Li}]];
+
+FOmbToOm[OmbList_] := Module[{n},
+If[Length[OmbList]<2, First@OmbList, 
+n = Length[OmbList];
+DivisorSum[n, (MoebiusMu[#] (y-y^-1)/(#(y^#-y^-#)) (OmbList[[n/#]]/.{y->y^#}))&]
+]];
+
 
 
 (* ::Section:: *)
