@@ -315,6 +315,7 @@ P2BinarySplits::usage="P2BinarySplits[Nvec_] gives the list of dimension vectors
 (* new routines in v1.5 *)
 ConstructMcKayDiagram::usage="ConstructMcKayDiagram[Nmax_,ListRays_] constructs the quiver scattering diagram with height up to Nmax; The output consists of a list of  {charge, {u,v}, parent1, parent2,n1,n2}  with parent1=parent2=0 for initial rays; If ListRays is not empty, then uses it as initial rays.";
 McKayTreesFromListRays::usage="McKayTreesFromListRays[ListRays_,{n1_,n2_,n3_}] extracts the list of distinct trees with given dimension vector";
+TreeFromListRays::usage="TreeFromListRays[ListRays_,k_] extracts the tree producing the k-th ray";
 McKayScattIndexImproved::usage="McKayScattIndexImproved[TreeList_, opt_] computes the index for each tree in TreeList, taking care of non-primitive internal states";
 McKayScattIndexImprovedInternal::usage="McKayScattIndexImprovedInternal[Tree_, opt_] computes the index for Tree, taking care of non-primitive internal states";
 InitialRaysOrigin::usage ="InitialRaysOrigin is a List of initial points (u_i,v_i) for initial rays in McKay scattering diagram";
@@ -1644,8 +1645,8 @@ Lipos=Flatten[Join[Table[Position[ListRays,{n1,n2,n3}/k],{k,Div}]],1];
 If[Lipos=={},
 Print["No such dimension vector in the list"],
 LiTrees=((n1+n2+n3)/Plus@@ListRays[[#,1]])TreeFromListRays[ListRays,#]&/@First[Transpose[Lipos]];
-ScattSort[DeleteDuplicatesBy[SortBy[LiTrees,Length[TreeConstituents[#]]&],McKayScattGraph]
-]]];
+DeleteDuplicatesBy[SortBy[LiTrees,Length[TreeConstituents[#]]&],McKayScattGraph]
+]];
 
 (* more careful implementation taking care of internal non-primitive states *)
 Options[McKayScattIndexImprovedInternal] = {"Debug"->False};
