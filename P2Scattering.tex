@@ -1,5 +1,5 @@
 
-\documentclass[12pt]{../JHEP3}
+\documentclass[12pt]{JHEP3}
 \usepackage{epsfig,amsfonts,amssymb,amsmath} 
  
 %\setlength{\topmargin}{.5cm}
@@ -117,7 +117,7 @@
 
 \def\newdefy{\vardef{y}}
 
-\title{P2Scattering.m v1.5}
+\title{P2Scattering.m v1.6}
  
 \author{Bruno Le Floch and Boris Pioline}
 
@@ -445,6 +445,15 @@ evaluates $2\pi i (\tau+1/2)+\bar f_1(\tau)$}
 {gives numerical value of $\tilde{T}=\frac{1}{2\sqrt3}(T-\frac12)$ using Eichler integral, by mapping back to fundamental domain $\cF_C$}
 \defn{EichlerTDtilde}{\vardef{tau}}
 { gives numerical value of $\tilde{T}_D=T_D-\frac12 T-\frac{1}{12}$ using Eichler integral, by mapping back to fundamental domain $\cF_C$}
+\defn{MeijerT}{\vardef{z}}
+{computes $T(z)$ using MeijerG function representation, valid for $\Im z>0$}
+\defn{MeijerTD}{\vardef{z}}
+{computes $T_D(z)$ using MeijerG function representation, valid for $\Im z>0$}
+\defn{tauFromz}{\vardef{z}}
+{computes $\tau(z)$ using ratio of hypergeometric functions, valid for $\Im z>0$}
+\defn{zFromtau}{\vardef{z}}{computes $z=-1/(J_3(\tau)+15)$}
+
+
 
 
 
@@ -596,9 +605,9 @@ $m$; this position is lowered vertically on each call, using variables \var{LiSl
 large volume scattering diagram truncated up to $\varphi\leq \phi_{max}$, 
 starting from initial rays $\pm \cO(k)$
 in the range $s_{min}\leq k \leq s_{max}$, with scattering products $N_1\gamma_1+N_2\gamma_2$, $2\leq N_1+N_2\leq N_{max}$ at each vertex.  The output 
-consists of a list of  $\{ (r,d, \chi), \{x,y\}, p_1, p_2,n_1,n_2 \}$ where
+consists of a list of  $\{ (r,d, \chi), \{x,y\}, p_1, p_2,n_1,n_2, d \}$ where
 $(u,v)$ is the initial point for the ray emitted from $n_1$ copies of $p_1$-th ray and $n_2$ copies of 
- $p_2$-th ray (with $p_1=p_2=0$ for initial rays);
+ $p_2$-th ray at depth $d=d_1+d_2+1$ (with $p_1=p_2=d_1=d_2=0$ for initial rays);
  If \var{ListRays} is not empty, then use it as initial rays.}
  
 \defn{LVTreesFromListRays}{\vardef{ListRays},\{\vardef{r},\vardef{d},\vardef{chi}\}}{ extracts the list 

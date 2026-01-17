@@ -2,9 +2,9 @@
 
 (*********************************************************************
  *
- *  P2Scattering.m 1.5         
+ *  P2Scattering.m 1.6         
  *                                                          
- *  Developed by Bruno Le Floch and Boris Pioline, October 2022-Jan 2025
+ *  Developed by Bruno Le Floch and Boris Pioline, October 2022-Jan 2026
  *
  *  Distributed under the terms of the GNU General Public License 
  *
@@ -70,9 +70,12 @@
  * - Added ConstructMcKayDiagram, McKayTreesFromListRays, McKayScattIndexImproved, InitialRaysOrigin
  * - Added ConstructLVDiagram, LVTreesFromListRays, ScattIndexImproved, ScattIndexImprovedInternal, CostPhi
  * - Added KroneckerDims, FOmbToOm
+ * 1-6
+ * - Optimized ConstructLVDiagram using association table
+ * - Added MeijerT, MeijerTD, tauFromz, zFromtau
  *********************************************************************)
  
-Print["P2Scattering 1.5 - A package for evaluating DT invariants on \!\(\*SubscriptBox[K,SuperscriptBox[\[DoubleStruckCapitalP],2]]\)"];
+Print["P2Scattering 1.6 - A package for evaluating DT invariants on \!\(\*SubscriptBox[K,SuperscriptBox[\[DoubleStruckCapitalP],2]]\)"];
 
 
 BeginPackage["IndexVars`"];
@@ -269,6 +272,7 @@ EichlerTD::usage= "EichlerTD[tau_] gives numerical value of TD[tau] using Eichle
 EichlerTtilde::usage= "EichlerTtilde[tau_] gives numerical value of Ttilde=(T-1/2)/(2Sqrt[3]) using Eichler integral, by mapping back to fundamental domain F_C";
 EichlerTDtilde::usage= "EichlerTDtilde[tau_] gives numerical value of TDtilde=TD-1/2T-1/12 using Eichler integral, by mapping back to fundamental domain F_C";
 
+(* misc *)
 IntersectExactRaysLV::usage="IntersectExactRaysLV[{r_,d_,chi_},{rr_,dd_,cchi_},psi_]returns value of tau of intersection point of two exact rays using EichlerTLV to evaluate the periods, or 0 if they are collinear";
 IntersectExactRaysC::usage="IntersectExactRaysC[{r_,d_,chi_},{rr_,dd_,cchi_},psi_]  returns value of tau of intersection point of two exact rays using EichlerTC to evaluate the periods, or 0 if they are collinear";
 CriticalPsi::usage = "CriticalPsi[mu_]:=ArcTan[mu/QuantumVolume]";
@@ -312,21 +316,28 @@ P2ListAllPartitions::usage = "P2ListAllPartitions[gam_] returns the list of unor
 P2BinarySplits::usage="P2BinarySplits[Nvec_] gives the list of dimension vectors which are smaller than Nvec/2";
 
 
-(* new routines in v1.5 *)
+(* new routines in v1.5, 1.6 *)
 ConstructMcKayDiagram::usage="ConstructMcKayDiagram[Nmax_,ListRays_] constructs the quiver scattering diagram with height up to Nmax; The output consists of a list of  {charge, {u,v}, parent1, parent2,n1,n2}  with parent1=parent2=0 for initial rays; If ListRays is not empty, then uses it as initial rays.";
 McKayTreesFromListRays::usage="McKayTreesFromListRays[ListRays_,{n1_,n2_,n3_}] extracts the list of distinct trees with given dimension vector";
 TreeFromListRays::usage="TreeFromListRays[ListRays_,k_] extracts the tree producing the k-th ray";
 McKayScattIndexImproved::usage="McKayScattIndexImproved[TreeList_, opt_] computes the index for each tree in TreeList, taking care of non-primitive internal states";
 McKayScattIndexImprovedInternal::usage="McKayScattIndexImprovedInternal[Tree_, opt_] computes the index for Tree, taking care of non-primitive internal states";
-InitialRaysOrigin::usage ="InitialRaysOrigin is a List of initial points (u_i,v_i) for initial rays in McKay scattering diagram";
+InitialRaysOrigin::usage="InitialRaysOrigin is a List of initial points (u_i,v_i) for initial rays in McKay scattering diagram";
+IntersectRaysNoTest::usage="IntersectRays[{r_,d_,chi_},{rr_,dd_,cchi_},z_,zz_]returns intersection point (x,y) of two rays if the intersection point strictly lies upward from z and z', or {} otherwise, without testing if DSZ<>0";  
+McKayIntersectRaysNoTest::usage="McKayIntersectRaysNoTest[Nvec_,NNvec_,z_,zz_] returns intersection point of two rays if the intersection point strictly lies strictly upward from z and z', or {} otherwise, without testing if DSZ<>0";
 
 ConstructLVDiagram::usage="ConstructLVDiagram[smin_,smax_,phimax_,Nm_,ListRays_] constructs the LV scattering diagram with initial rays O(k),O(k)[1] in the interval smin<=k<=smax, cost function up to phimax, scattering products with n1+n2<=Nm at each intersection; the output consists of a list of {charge, {x,y}, parent1,parent2,n1,n2}, with parent1=parent2=0 for initial rays; If ListRays is not empty, then uses it as initial rays."; LVTreesFromListRays::usage="lVTreesFromListRays[ListRays_,{r_,d_,chi_}] extract the trees with given charge in the List of rays,  by ConstructLVDiagram";
 ScattIndexImproved::usage="ScattIndexImproved[TreeList_, opt_] computes the index for each tree in TreeList, taking care of non-primitive internal states";
 ScattIndexImprovedInternal::usage="ScattIndexImprovedInternal[Tree_, opt_] computes the index for Tree, taking care of non-primitive internal states";
 CostPhi::usage="CostPhi[{r_,d_,chi_},s_]:=d-r s";
-
 KroneckerDims::usage="KroneckerDims[m_,Nn_] gives the list of populated dimension vectors {n1,n2} for Kronecker quiver with m arrows, with (n1,n2) coprime and 0<=n1+n2<=Nn"; 
 FOmbToOm::usage="FOmbToOm[OmbList_] computes integer index from list of rational indices, used internally by FScattIndex";
+
+MeijerT::usage="MeijerT[z_] computes T using MeijerG representation, for Im[z]>0 only";
+MeijerTD::usage="MeijerTD[z_] computes T using MeijerG representation, for Im[z]>0 only";
+tauFromz::usage="tauFromz[z_] computes the modulus tau from z, for Im[z]>0 only";
+zFromtau::usage="zFromtau[tau_] computes z=-1/(J3[tau]+15)";
+
 
 
 (* ::Section:: *)
@@ -491,7 +502,9 @@ If[(r dd-rr d!=0) (*&&(r rr+d dd<=0)*),{(2 cchi r-3 dd r-2 chi rr+3 d rr)/(2 dd 
 IntersectRays[{r_,d_,chi_},{rr_,dd_,cchi_},z_,zz_]:=
 (* returns (x,y) coordinate of intersection point of two rays, or {} if they don't intersect *)
 Module[{zi},If[(r dd-rr d!=0) ,zi={(2 cchi r-3 dd r-2 chi rr+3 d rr)/(2 dd r-2 d rr),(cchi d-chi dd+dd r-d rr)/(-dd r+d rr)};
-If[(zi-z) . {-r,d}>=0&&(zi-zz) . {-rr,dd}>=0,zi,{}]]];
+(* If[(zi-z) . {-r,d}>=0&&(zi-zz) . {-rr,dd}>=0,zi,{}]] *)
+If[(zi-z) . {-r,d}>=0&&(zi-zz) . {-rr,dd}>=0,zi,{}]]
+];
 
 IntersectRaysSt[{r_,d_,chi_},{rr_,dd_,cchi_},psi_]:=
 (* returns (s,t) coordinate of intersection point of two rays, or {} if they are collinear *)
@@ -1414,6 +1427,11 @@ EichlerTD[tau_]:=EichlerZch2[{-1,0,0},tau];
 EichlerTtilde[tau_]:=EichlerZch2[{0,-1/2/Sqrt[3],-1/4/Sqrt[3]},tau];
 EichlerTDtilde[tau_]:=EichlerZch2[{-1,-1/2,1/12},tau];
 
+zFromtau[tau_]:=-1/((DedekindEta[tau]/DedekindEta[3tau])^12+27);
+tauFromz[z_]:=I/Sqrt[3](2Pi I)Hypergeometric2F1[1/3,2/3,1,1+27z]/Hypergeometric2F1[1/3,2/3,1,-27z]/(2Pi I);
+MeijerT[z_]:=-1/2-MeijerG[{{2/3,1/3},{1}},{{0,0},{0}},27 z]/( Gamma[1/3]Gamma[2/3] 2Pi I);
+MeijerTD[z_]:=(1/2(MeijerG[{{1/3},{2/3,1}},{{0,0,0},{}},27 z]+MeijerG[{{2/3},{1/3,1}},{{0,0,0},{}},27 z])-Pi^2/3)/(2Pi I)^2-1/2 MeijerT[z];
+
 Initialtau1={};
 Initialtau2={};
 
@@ -1544,10 +1562,10 @@ RayFromInfinity[gamma:{r_,d_,chi_},psi_]:=
 
 
 (* ::Section:: *)
-(*New routines in v1.5*)
+(*New routines in v1.5, optimized in v1.6*)
 
 
-ConstructLVDiagram[smin_,smax_,phimax_,Nm_,ListRays0_]:=Module[
+(* old in 1.5: ConstructLVDiagram[smin_,smax_,phimax_,Nm_,ListRays0_]:=Module[
 {Inter,ListInter,ListRays,ListNewRays,kappa,KTab},
 (* initial rays {charge, {x,y}, parent1, parent2,n1,n2 } *)
 If[ListRays0=={},
@@ -1576,7 +1594,70 @@ Print["Adding ",Length[ListNewRays], " rays, "];
 ListRays=Flatten[{ListRays,ListNewRays},1];
 ]];
 Print[Length[ListRays], " in total."];
-ListRays];
+ListRays]; *)
+
+(* optimized using association tables *)
+ConstructLVDiagram[smin_,smax_,phimax_,Nm_,ListRays0_] :=
+ Module[{ListRays, seen, n, new, kappa, inter, ktab},
+(* initial rays {charge, {x,y}, parent1, parent2,n1,n2 } *)
+If[ListRays0=={},
+         ListRays=Flatten[{
+Table[{Ch[k],{k,-k^2/2},0,0,0,0,0},{k,Ceiling[smin],Floor[smax]}],
+Table[{Ch[k][1],{k,-k^2/2},0,0,0,0,0},{k,Ceiling[smin],Floor[smax]}]},1]/.repCh;
+,
+(* If list of rays is already provided *)
+ListRays=ListRays0;
+];
+   seen = AssociationThread[
+     Select[ListRays[[All, {3, 4}]], First[#] > 0 &] -> True
+  ];
+  CheckAbort[
+   While[True,
+    n = Length[ListRays];
+    new = Reap[
+       Do[
+        If[!KeyExistsQ[seen,{i,j}],
+         seen[{i, j}] = True;
+         kappa = DSZ[ListRays[[i, 1]], ListRays[[j, 1]]];
+         If[kappa =!= 0,
+          inter = IntersectRaysNoTest[
+            ListRays[[i, 1]], ListRays[[j, 1]],
+            ListRays[[i, 2]], ListRays[[j, 2]]
+          ];
+  
+          If[inter =!= {},
+           ktab = KroneckerDims[Abs[kappa], Nm];
+           Do[
+            If[
+             CostPhi[ktab[[k, 1]] ListRays[[i, 1]] + ktab[[k, 2]] ListRays[[j, 1]],
+               inter[[1]]] <= phimax,
+             Sow[{
+               ktab[[k, 1]] ListRays[[i, 1]] + ktab[[k, 2]] ListRays[[j, 1]],
+               inter, i, j, ktab[[k, 1]], ktab[[k, 2]],
+               1 + Max[ListRays[[i, 7]], ListRays[[j, 7]]]
+               }]
+            ],
+            {k, Length[ktab]}
+           ];
+          ]];
+         ],
+        {i, n}, {j, i + 1, n}
+       ]
+      ][[2]];
+    
+    new = If[new === {}, {}, First[new]];
+    If[new === {} || new === Null, Break[],
+     Print["Adding ", Length[new], " rays, "];
+     ListRays = Join[ListRays, new];
+    ];
+   ];
+   Print[Length[ListRays], " in total."];
+   ListRays,
+   Print["Aborted -- returning partial ListRays (", Length[ListRays], ")."];
+   ListRays
+  ]
+ ];
+
 
 (* Extract tree leading to k-th ray, internal *)
 TreeFromListRays[ListRays_,k_]:=If[ListRays[[k,3]]==0,ListRays[[k,1]],{ListRays[[k,5]]TreeFromListRays[ListRays,ListRays[[k,3]]],ListRays[[k,6]]TreeFromListRays[ListRays,ListRays[[k,4]]]}];
